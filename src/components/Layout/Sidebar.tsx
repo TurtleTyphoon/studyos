@@ -42,6 +42,7 @@ export default function Sidebar({ activePanel, onNavigate, onFilterByWeek }: Sid
     { id: 'dashboard', icon: 'layout-dashboard', label: 'Dashboard' },
     { id: 'quiz', icon: 'brain', label: 'Quiz' },
     { id: 'notes', icon: 'notes', label: 'Notes' },
+    { id: 'graph', icon: 'network', label: 'Graph' },
     { id: 'leaderboard', icon: 'trophy', label: 'Leaderboard' },
   ]
 

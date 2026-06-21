@@ -4,6 +4,7 @@ import remarkGfm from 'remark-gfm'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
 import type { Note, Course } from '../../types/database'
+import SlashMenu from './SlashMenu'
 
 interface NoteEditorProps {
   note: Note | null
@@ -100,6 +101,10 @@ export default function NoteEditor({ note, courses, allNotes, onSave, onClose, o
   const [showLinkSuggest, setShowLinkSuggest] = useState(false)
   const [linkQuery, setLinkQuery] = useState('')
   const [linkPos, setLinkPos] = useState({ top: 0, left: 0 })
+  const [showSlash, setShowSlash] = useState(false)
+  const [slashQuery, setSlashQuery] = useState('')
+  const [slashPos, setSlashPos] = useState({ top: 0, left: 0 })
+  const [uploadingImage, setUploadingImage] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const isNew = !note
@@ -152,10 +157,10 @@ export default function NoteEditor({ note, courses, allNotes, onSave, onClose, o
 
     const pos = e.target.selectionStart
     const textBefore = val.slice(0, pos)
-    const match = textBefore.match(/\[\[([^\]]*)$/)
 
-    if (match) {
-      setLinkQuery(match[1].toLowerCase())
+    const linkMatch = textBefore.match(/\[\[([^\]]*)$/)
+    if (linkMatch) {
+      setLinkQuery(linkMatch[1].toLowerCase())
       setShowLinkSuggest(true)
       const textarea = textareaRef.current
       if (textarea) {
@@ -163,6 +168,75 @@ export default function NoteEditor({ note, courses, allNotes, onSave, onClose, o
       }
     } else {
       setShowLinkSuggest(false)
+    }
+
+    const lineStart = textBefore.lastIndexOf('\n') + 1
+    const currentLine = textBefore.slice(lineStart)
+    const slashMatch = currentLine.match(/^\/(\w*)$/)
+    if (slashMatch) {
+      setSlashQuery(slashMatch[1])
+      setShowSlash(true)
+      const textarea = textareaRef.current
+      if (textarea) {
+        setSlashPos({ top: textarea.offsetTop + 30, left: textarea.offsetLeft + 20 })
+      }
+    } else {
+      setShowSlash(false)
+    }
+  }
+
+  function handleSlashSelect(template: string) {
+    const textarea = textareaRef.current
+    if (!textarea) return
+    const pos = textarea.selectionStart
+    const textBefore = content.slice(0, pos)
+    const lineStart = textBefore.lastIndexOf('\n') + 1
+    const before = content.slice(0, lineStart)
+    const after = content.slice(pos)
+    setContent(before + template + after)
+    setShowSlash(false)
+    setTimeout(() => {
+      textarea.focus()
+      const newPos = lineStart + template.length
+      textarea.setSelectionRange(newPos, newPos)
+    }, 0)
+  }
+
+  async function handlePaste(e: React.ClipboardEvent) {
+    const items = e.clipboardData.items
+    for (const item of Array.from(items)) {
+      if (item.type.startsWith('image/')) {
+        e.preventDefault()
+        const file = item.getAsFile()
+        if (!file || !user) return
+
+        setUploadingImage(true)
+        const ext = file.type.split('/')[1] || 'png'
+        const path = `${user.id}/${Date.now()}.${ext}`
+
+        const { error } = await supabase.storage.from('note-attachments').upload(path, file)
+        if (error) {
+          setUploadingImage(false)
+          return
+        }
+
+        const { data: urlData } = supabase.storage.from('note-attachments').getPublicUrl(path)
+        const imageUrl = urlData.publicUrl
+
+        const textarea = textareaRef.current
+        if (textarea) {
+          const pos = textarea.selectionStart
+          const markdown = `![image](${imageUrl})\n`
+          setContent(content.slice(0, pos) + markdown + content.slice(pos))
+          setTimeout(() => {
+            textarea.focus()
+            const newPos = pos + markdown.length
+            textarea.setSelectionRange(newPos, newPos)
+          }, 0)
+        }
+        setUploadingImage(false)
+        return
+      }
     }
   }
 
@@ -310,10 +384,23 @@ export default function NoteEditor({ note, courses, allNotes, onSave, onClose, o
               <textarea
                 ref={textareaRef}
                 className="note-editor-textarea"
-                placeholder={'Start writing... (Markdown supported)\n\nTips:\n  ?? hidden answer ??  →  Active recall block\n  [[Note Title]]        →  Link to another note'}
+                placeholder={'Start writing... (Markdown supported)\n\nTips:\n  /             →  Slash commands menu\n  ?? answer ??  →  Active recall block\n  [[Note Title]]  →  Link to another note\n  Cmd+V image   →  Paste screenshot'}
                 value={content}
                 onChange={handleTextareaChange}
+                onPaste={handlePaste}
                 spellCheck
+              />
+              {uploadingImage && (
+                <div style={{ position: 'absolute', bottom: 8, right: 8, fontSize: 10, color: 'var(--subtle)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <i className="ti ti-loader-2" style={{ fontSize: 11, animation: 'spin 1s linear infinite' }} />Uploading image...
+                </div>
+              )}
+              <SlashMenu
+                visible={showSlash}
+                query={slashQuery}
+                position={slashPos}
+                onSelect={handleSlashSelect}
+                onClose={() => setShowSlash(false)}
               />
               {showLinkSuggest && linkSuggestions.length > 0 && (
                 <div className="link-suggest" style={{ top: linkPos.top, left: linkPos.left }}>
