@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 
 interface Props {
   textareaRef: React.RefObject<HTMLTextAreaElement | null>
@@ -212,8 +213,8 @@ export default function TypographyToolbar({ textareaRef, content, onContentChang
         </button>
       </div>
 
-      {/* Heading dropdown - fixed position portal */}
-      {headingOpen && (
+      {/* Heading dropdown - portalled to body */}
+      {headingOpen && createPortal(
         <div ref={headingDropRef} className="typo-dropdown-fixed" style={{ top: headingPos.top, left: headingPos.left }}>
           <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => doHeading(0)}>
             <span style={{ fontSize: 12 }}>Normal text</span>
@@ -230,11 +231,12 @@ export default function TypographyToolbar({ textareaRef, content, onContentChang
           <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => doHeading(4)}>
             <span style={{ fontSize: 12, fontWeight: 600 }}>Heading 4</span>
           </button>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {/* Insert dropdown - fixed position portal */}
-      {insertOpen && (
+      {/* Insert dropdown - portalled to body */}
+      {insertOpen && createPortal(
         <div ref={insertDropRef} className="typo-dropdown-fixed typo-dropdown-wide" style={{ top: insertPos.top, left: insertPos.left }}>
           <div className="typo-dropdown-label">Data</div>
           <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => doInsert('\n| Header | Header | Header |\n|--------|--------|--------|\n| Cell   | Cell   | Cell   |\n| Cell   | Cell   | Cell   |\n')}>
@@ -359,7 +361,8 @@ export default function TypographyToolbar({ textareaRef, content, onContentChang
           <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => doInsert('\n![image](url)\n')}>
             <i className="ti ti-photo" /><span>Image</span>
           </button>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   )
