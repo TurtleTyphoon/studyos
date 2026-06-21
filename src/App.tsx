@@ -55,7 +55,6 @@ Press **Cmd+V** to paste screenshots directly into your notes. They upload autom
 | **Node View** | Toggle grid icon in Notes panel |
 | **Concept Graph** | Click "Graph" in the sidebar |
 | **AI Quiz** | Click "Quiz" in the sidebar, select a note |
-| **Study Timer** | Right sidebar -- stopwatch or Pomodoro |
 | **Shared Courses** | Click "Share" in the topbar |
 | **Course Details** | Click any course card on the Dashboard |
 | **Learning Objectives** | Course Detail > Objectives tab |
@@ -76,7 +75,6 @@ Switch between **Edit**, **Preview**, and **Study** using the toggle in the note
 
 ## Tips
 
-- Use the **Pomodoro timer** (25 min focus sessions) -- you earn 2 XP per minute studied
 - **Add concepts** (comma-separated tags) to your notes so they appear in the Graph
 - Create **assessments** with due dates and weights to track your grades
 - Set **learning objectives** per week to stay on track
