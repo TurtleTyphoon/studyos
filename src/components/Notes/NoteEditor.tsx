@@ -13,6 +13,7 @@ import FloatingToolbar from './FloatingToolbar'
 import CommandPalette from './CommandPalette'
 import BacklinksPanel from './BacklinksPanel'
 import TypographyToolbar from './TypographyToolbar'
+import SimpleEditor from './SimpleEditor'
 
 interface NoteEditorProps {
   note: Note | null
@@ -220,7 +221,7 @@ export default function NoteEditor({ note, courses, allNotes, onSave, onClose, o
   const [courseId, setCourseId] = useState(note?.course_id ?? '')
   const [week, setWeek] = useState(note?.week?.toString() ?? '')
   const [concepts, setConcepts] = useState(note?.concepts?.join(', ') ?? '')
-  const [mode, setMode] = useState<'edit' | 'preview' | 'study'>('edit')
+  const [mode, setMode] = useState<'simple' | 'edit' | 'preview' | 'study'>('simple')
   const [saving, setSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState<string | null>(null)
   const [splitFile, setSplitFile] = useState<string | null>(null)
@@ -404,7 +405,7 @@ export default function NoteEditor({ note, courses, allNotes, onSave, onClose, o
           </div>
           <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
             {lastSaved && <span style={{ fontSize: 10, color: 'var(--subtle)' }}>Saved {lastSaved}</span>}
-            {mode === 'edit' && (
+            {(mode === 'edit' || mode === 'simple') && (
               <>
                 <button className="btn" onClick={insertRecallBlock} title="Insert recall block">
                   <i className="ti ti-brain" style={{ fontSize: 12 }} />??
@@ -427,8 +428,11 @@ export default function NoteEditor({ note, courses, allNotes, onSave, onClose, o
               </>
             )}
             <div className="note-editor-mode-toggle">
-              <button className={`mode-btn ${mode === 'edit' ? 'active' : ''}`} onClick={() => setMode('edit')}>
-                <i className="ti ti-pencil" style={{ fontSize: 12 }} />Edit
+              <button className={`mode-btn ${mode === 'simple' ? 'active' : ''}`} onClick={() => setMode('simple')} title="Rich text editor">
+                <i className="ti ti-pencil" style={{ fontSize: 12 }} />Write
+              </button>
+              <button className={`mode-btn ${mode === 'edit' ? 'active' : ''}`} onClick={() => setMode('edit')} title="Markdown editor">
+                <i className="ti ti-code" style={{ fontSize: 12 }} />Markdown
               </button>
               <button className={`mode-btn ${mode === 'preview' ? 'active' : ''}`} onClick={() => setMode('preview')}>
                 <i className="ti ti-eye" style={{ fontSize: 12 }} />Preview
@@ -477,7 +481,9 @@ export default function NoteEditor({ note, courses, allNotes, onSave, onClose, o
         )}
 
         <div className="note-editor-main-pane" style={{ position: 'relative' }}>
-          {mode === 'edit' ? (
+          {mode === 'simple' ? (
+            <SimpleEditor content={content} onContentChange={setContent} />
+          ) : mode === 'edit' ? (
             <div className="editor-write-pane" style={{ position: 'relative' }}>
               <TypographyToolbar textareaRef={textareaRef} content={content} onContentChange={setContent} />
               <textarea
@@ -517,7 +523,7 @@ export default function NoteEditor({ note, courses, allNotes, onSave, onClose, o
           )}
         </div>
 
-        {!focusMode && showBacklinks && mode === 'edit' && !splitFile && (
+        {!focusMode && showBacklinks && (mode === 'edit' || mode === 'simple') && !splitFile && (
           <BacklinksPanel currentNote={note} allNotes={allNotes} onOpenNote={onOpenNote} />
         )}
       </div>

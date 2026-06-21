@@ -260,6 +260,31 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .assessment-card:hover{border-color:var(--border-strong)}
 .assessment-card.completed{opacity:0.6}
 
+/* Simple editor (rich text) */
+.simple-editor{display:flex;flex-direction:column;flex:1;min-height:0}
+.se-toolbar{border-bottom:1px solid var(--border);background:var(--surface);padding:4px 8px;display:flex;align-items:center;gap:1px;flex-shrink:0;flex-wrap:nowrap;min-height:36px}
+.se-btn{background:none;border:none;width:30px;height:28px;display:inline-flex;align-items:center;justify-content:center;border-radius:5px;cursor:pointer;color:var(--muted);font-size:15px;transition:background .1s,color .1s;flex-shrink:0}
+.se-btn:hover{background:var(--border);color:var(--text)}
+.se-sep{width:1px;height:16px;background:var(--border);margin:0 6px;flex-shrink:0}
+.se-heading-select{border:1px solid var(--border);border-radius:4px;padding:3px 6px;font-size:11px;font-family:var(--font);color:var(--text);background:var(--bg);cursor:pointer;height:28px}
+.se-content{flex:1;padding:16px 20px;overflow-y:auto;font-family:var(--font);font-size:14px;line-height:1.8;color:var(--text);outline:none;min-height:200px}
+.se-content:empty::before{content:attr(data-placeholder);color:var(--subtle);pointer-events:none}
+.se-content h1{font-size:24px;font-weight:700;margin:16px 0 8px;line-height:1.3;letter-spacing:-.3px}
+.se-content h2{font-size:20px;font-weight:600;margin:14px 0 6px;line-height:1.3;letter-spacing:-.2px;border-bottom:1px solid var(--border);padding-bottom:6px}
+.se-content h3{font-size:16px;font-weight:600;margin:12px 0 4px;line-height:1.4}
+.se-content h4{font-size:14px;font-weight:600;margin:10px 0 4px;line-height:1.4}
+.se-content p{margin:4px 0}
+.se-content blockquote{border-left:3px solid var(--border);padding-left:12px;color:var(--muted);margin:8px 0;font-style:italic}
+.se-content ul,.se-content ol{padding-left:20px;margin:4px 0}
+.se-content li{margin:2px 0}
+.se-content code{background:var(--surface);padding:1px 4px;border-radius:3px;font-size:12px;font-family:'SF Mono',Monaco,monospace}
+.se-content a{color:#1e40af;text-decoration:underline}
+.se-content hr{border:none;border-top:1px solid var(--border);margin:12px 0}
+.se-content mark{background:#fef08a;padding:1px 2px;border-radius:2px}
+.se-content strong{font-weight:600}
+.se-check{display:flex;align-items:center;gap:6px;margin:2px 0}
+.se-check input{margin:0}
+
 /* Editor write pane */
 .editor-write-pane{flex:1;position:relative;display:flex;flex-direction:column;min-height:0}
 .editor-write-pane .note-editor-textarea{border:none;border-radius:0;flex:1}
