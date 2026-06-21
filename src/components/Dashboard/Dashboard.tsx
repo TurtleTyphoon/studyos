@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
-import type { Course, QuizAttempt, Badge } from '../../types/database'
+import type { Course, QuizAttempt } from '../../types/database'
 
 const BADGE_DEFS = [
   { type: 'first_note', name: 'First Note', icon: 'ti-file-text' },
@@ -38,7 +38,7 @@ export default function Dashboard() {
     if (coursesRes.data) setCourses(coursesRes.data)
     if (quizRes.data) setQuizHistory(quizRes.data)
     setNoteCount(notesRes.count ?? 0)
-    if (badgesRes.data) setEarnedBadges(new Set(badgesRes.data.map(b => b.badge_type)))
+    if (badgesRes.data) setEarnedBadges(new Set((badgesRes.data as { badge_type: string }[]).map(b => b.badge_type)))
   }
 
   const level = profile ? Math.floor(profile.xp / 200) + 1 : 1
