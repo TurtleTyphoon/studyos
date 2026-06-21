@@ -10,7 +10,6 @@ import LeaderboardPanel from './components/Leaderboard/LeaderboardPanel'
 import AddCourseModal from './components/ui/AddCourseModal'
 import AddNoteModal from './components/ui/AddNoteModal'
 import ShareCourseModal from './components/ui/ShareCourseModal'
-import StudyTimer from './components/ui/StudyTimer'
 import ConceptGraph from './components/Notes/ConceptGraph'
 import CourseDetailPanel from './components/Course/CourseDetailPanel'
 import Toast from './components/ui/Toast'
@@ -206,10 +205,6 @@ function AppInner() {
           )}
           {activePanel === 'leaderboard' && <LeaderboardPanel />}
         </div>
-      </div>
-
-      <div className="study-timer-sidebar">
-        <StudyTimer courses={courses} />
       </div>
 
       <AddCourseModal open={showAddCourse} onClose={() => setShowAddCourse(false)} onSuccess={setToast} />

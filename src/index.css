@@ -139,7 +139,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .note-editor-title::placeholder{color:var(--border-strong)}
 .note-editor-concepts{width:100%;border:none;outline:none;font-family:var(--font);font-size:11px;color:var(--muted);background:transparent;padding:0;margin-bottom:8px;border-bottom:1px solid var(--border);padding-bottom:8px}
 .note-editor-concepts::placeholder{color:var(--border)}
-.note-editor-body{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.note-editor-body{flex:1;overflow:hidden;display:flex;flex-direction:row}
 .note-editor-body.split{flex-direction:row}
 .note-editor-main-pane{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
 .note-editor-textarea{flex:1;width:100%;border:none;outline:none;resize:none;font-family:'Geist Mono',ui-monospace,monospace;font-size:13px;line-height:1.7;color:var(--text);padding:12px 18px;background:transparent}
@@ -202,7 +202,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .slash-menu-desc{font-size:10px;color:var(--subtle)}
 
 /* Study timer sidebar */
-.study-timer-sidebar{position:fixed;top:48px;right:0;width:190px;padding:10px;border-left:1px solid var(--border);background:var(--bg);height:calc(100vh - 48px);overflow-y:auto;z-index:20}
 .study-timer{display:flex;flex-direction:column;gap:8px}
 .study-timer-display{text-align:center;padding:8px 0}
 .study-timer-time{font-size:28px;font-weight:600;letter-spacing:-1px;font-variant-numeric:tabular-nums}
@@ -229,7 +228,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
 
 /* Adjust main content to account for timer sidebar */
-.main{margin-right:190px}
+.main{margin-right:0}
 
 /* Node view grid */
 .notes-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
@@ -318,7 +317,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .markdown-body mark{background:#fef08a;padding:1px 2px;border-radius:2px}
 
 /* Typography toolbar */
-.typo-toolbar{border-bottom:1px solid var(--border);background:var(--surface);padding:4px 8px;display:flex;align-items:center;gap:0;flex-shrink:0;overflow-x:auto}
+.typo-toolbar{border-bottom:1px solid var(--border);background:var(--surface);padding:4px 8px;display:flex;align-items:center;gap:0;flex-shrink:0;flex-wrap:nowrap;overflow-x:auto;min-height:36px}
 .typo-group{display:flex;align-items:center;gap:1px;position:relative}
 .typo-sep{width:1px;height:16px;background:var(--border);margin:0 6px;flex-shrink:0}
 .typo-btn{background:none;border:none;width:30px;height:28px;display:inline-flex;align-items:center;justify-content:center;border-radius:5px;cursor:pointer;color:var(--muted);font-size:15px;transition:background .1s,color .1s;flex-shrink:0}
