@@ -191,16 +191,151 @@ export default function TypographyToolbar({ textareaRef, content, onContentChang
 
       {/* Insert dropdown */}
       <div className="typo-group" ref={insertRef}>
-        <button className="typo-btn typo-btn-wide" onClick={() => setInsertOpen(v => !v)} onMouseDown={e => e.preventDefault()} title="Insert block">
+        <button className="typo-btn typo-btn-wide" onClick={() => setInsertOpen(v => !v)} onMouseDown={e => e.preventDefault()} title="Insert component">
           <i className="ti ti-plus" />
           <i className="ti ti-chevron-down" style={{ fontSize: 9, marginLeft: 2 }} />
         </button>
         {insertOpen && (
-          <div className="typo-dropdown">
+          <div className="typo-dropdown typo-dropdown-wide">
+            <div className="typo-dropdown-label">Data</div>
             <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => insertText(ta, c, '\n| Header | Header | Header |\n|--------|--------|--------|\n| Cell   | Cell   | Cell   |\n| Cell   | Cell   | Cell   |\n')); setInsertOpen(false) }}>
               <i className="ti ti-table" style={{ fontSize: 14 }} />
               <span>Table</span>
             </button>
+            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => insertText(ta, c, '\n<div class="sc-card">\n<div class="sc-card-header">\n<div class="sc-card-title">Card Title</div>\n<div class="sc-card-desc">Card description or subtitle</div>\n</div>\n<div class="sc-card-content">\n\nYour content here.\n\n</div>\n</div>\n')); setInsertOpen(false) }}>
+              <i className="ti ti-layout-cards" style={{ fontSize: 14 }} />
+              <span>Card</span>
+            </button>
+            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => insertText(ta, c, '\n<div class="sc-tabs">\n<div class="sc-tab-list">\n<span class="sc-tab active">Tab 1</span>\n<span class="sc-tab">Tab 2</span>\n<span class="sc-tab">Tab 3</span>\n</div>\n<div class="sc-tab-content">\n\nTab 1 content here.\n\n</div>\n</div>\n')); setInsertOpen(false) }}>
+              <i className="ti ti-layout-navbar" style={{ fontSize: 14 }} />
+              <span>Tabs</span>
+            </button>
+
+            <div className="typo-dropdown-label">Feedback</div>
+            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => insertText(ta, c, '\n<div class="sc-alert sc-alert-info">\n<i class="ti ti-info-circle"></i>\n<div><strong>Note</strong><br>This is an informational alert.</div>\n</div>\n')); setInsertOpen(false) }}>
+              <i className="ti ti-info-circle" style={{ fontSize: 14 }} />
+              <span>Alert (Info)</span>
+            </button>
+            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => insertText(ta, c, '\n<div class="sc-alert sc-alert-warning">\n<i class="ti ti-alert-triangle"></i>\n<div><strong>Warning</strong><br>Pay attention to this.</div>\n</div>\n')); setInsertOpen(false) }}>
+              <i className="ti ti-alert-triangle" style={{ fontSize: 14 }} />
+              <span>Alert (Warning)</span>
+            </button>
+            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => insertText(ta, c, '\n<div class="sc-alert sc-alert-error">\n<i class="ti ti-alert-octagon"></i>\n<div><strong>Critical</strong><br>This is a critical alert.</div>\n</div>\n')); setInsertOpen(false) }}>
+              <i className="ti ti-alert-octagon" style={{ fontSize: 14 }} />
+              <span>Alert (Error)</span>
+            </button>
+            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => insertText(ta, c, '\n<div class="sc-alert sc-alert-success">\n<i class="ti ti-circle-check"></i>\n<div><strong>Success</strong><br>Everything looks good.</div>\n</div>\n')); setInsertOpen(false) }}>
+              <i className="ti ti-circle-check" style={{ fontSize: 14 }} />
+              <span>Alert (Success)</span>
+            </button>
+            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => insertText(ta, c, '\n<div class="sc-progress-wrap">\n<div class="sc-progress-label">Progress</div>\n<div class="sc-progress"><div class="sc-progress-bar" style="width:60%"></div></div>\n<div class="sc-progress-value">60%</div>\n</div>\n')); setInsertOpen(false) }}>
+              <i className="ti ti-chart-bar" style={{ fontSize: 14 }} />
+              <span>Progress Bar</span>
+            </button>
+
+            <div className="typo-dropdown-label">Interactive</div>
+            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => insertText(ta, c, '\n<details class="sc-accordion">\n<summary>Click to expand</summary>\n<div class="sc-accordion-content">\n\nHidden content goes here.\n\n</div>\n</details>\n')); setInsertOpen(false) }}>
+              <i className="ti ti-layout-bottombar-collapse" style={{ fontSize: 14 }} />
+              <span>Accordion</span>
+            </button>
+            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => insertText(ta, c, '\n<details class="sc-accordion">\n<summary>Section 1</summary>\n<div class="sc-accordion-content">Content 1</div>\n</details>\n<details class="sc-accordion">\n<summary>Section 2</summary>\n<div class="sc-accordion-content">Content 2</div>\n</details>\n<details class="sc-accordion">\n<summary>Section 3</summary>\n<div class="sc-accordion-content">Content 3</div>\n</details>\n')); setInsertOpen(false) }}>
+              <i className="ti ti-layout-list" style={{ fontSize: 14 }} />
+              <span>Accordion Group</span>
+            </button>
+            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => insertText(ta, c, '\n> [!toggle] Click to expand\n> Hidden content here\n')); setInsertOpen(false) }}>
+              <i className="ti ti-caret-right" style={{ fontSize: 14 }} />
+              <span>Toggle / Collapsible</span>
+            </button>
+
+            <div className="typo-dropdown-label">Inline</div>
+            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => wrapSelection(ta, c, '<span class="sc-badge">', '</span>')); setInsertOpen(false) }}>
+              <i className="ti ti-tag" style={{ fontSize: 14 }} />
+              <span>Badge</span>
+            </button>
+            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => wrapSelection(ta, c, '<span class="sc-badge sc-badge-green">', '</span>')); setInsertOpen(false) }}>
+              <i className="ti ti-tag" style={{ fontSize: 14, color: '#166534' }} />
+              <span>Badge (Green)</span>
+            </button>
+            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => wrapSelection(ta, c, '<span class="sc-badge sc-badge-red">', '</span>')); setInsertOpen(false) }}>
+              <i className="ti ti-tag" style={{ fontSize: 14, color: '#991b1b' }} />
+              <span>Badge (Red)</span>
+            </button>
+            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => wrapSelection(ta, c, '<span class="sc-badge sc-badge-blue">', '</span>')); setInsertOpen(false) }}>
+              <i className="ti ti-tag" style={{ fontSize: 14, color: '#1e40af' }} />
+              <span>Badge (Blue)</span>
+            </button>
+            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => wrapSelection(ta, c, '<span class="sc-badge sc-badge-outline">', '</span>')); setInsertOpen(false) }}>
+              <i className="ti ti-tag" style={{ fontSize: 14 }} />
+              <span>Badge (Outline)</span>
+            </button>
+            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => wrapSelection(ta, c, '<kbd>', '</kbd>')); setInsertOpen(false) }}>
+              <i className="ti ti-keyboard" style={{ fontSize: 14 }} />
+              <span>Keyboard Key</span>
+            </button>
+
+            <div className="typo-dropdown-label">Layout</div>
+            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => insertText(ta, c, '\n<div class="sc-separator"></div>\n')); setInsertOpen(false) }}>
+              <i className="ti ti-minus" style={{ fontSize: 14 }} />
+              <span>Separator</span>
+            </button>
+            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => insertText(ta, c, '\n<div class="sc-columns">\n<div class="sc-col">\n\nLeft column content.\n\n</div>\n<div class="sc-col">\n\nRight column content.\n\n</div>\n</div>\n')); setInsertOpen(false) }}>
+              <i className="ti ti-columns-2" style={{ fontSize: 14 }} />
+              <span>Two Columns</span>
+            </button>
+            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => insertText(ta, c, '\n<div class="sc-columns sc-columns-3">\n<div class="sc-col">\n\nCol 1\n\n</div>\n<div class="sc-col">\n\nCol 2\n\n</div>\n<div class="sc-col">\n\nCol 3\n\n</div>\n</div>\n')); setInsertOpen(false) }}>
+              <i className="ti ti-columns-3" style={{ fontSize: 14 }} />
+              <span>Three Columns</span>
+            </button>
+            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => insertText(ta, c, '\n<figure class="sc-figure">\n<img src="url" alt="description" />\n<figcaption>Image caption here</figcaption>\n</figure>\n')); setInsertOpen(false) }}>
+              <i className="ti ti-photo" style={{ fontSize: 14 }} />
+              <span>Figure + Caption</span>
+            </button>
+
+            <div className="typo-dropdown-label">Steps & Lists</div>
+            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => insertText(ta, c, '\n<div class="sc-steps">\n<div class="sc-step">\n<div class="sc-step-num">1</div>\n<div class="sc-step-body">\n<div class="sc-step-title">First step</div>\n<div class="sc-step-desc">Description of what to do</div>\n</div>\n</div>\n<div class="sc-step">\n<div class="sc-step-num">2</div>\n<div class="sc-step-body">\n<div class="sc-step-title">Second step</div>\n<div class="sc-step-desc">Description of what to do</div>\n</div>\n</div>\n<div class="sc-step">\n<div class="sc-step-num">3</div>\n<div class="sc-step-body">\n<div class="sc-step-title">Third step</div>\n<div class="sc-step-desc">Description of what to do</div>\n</div>\n</div>\n</div>\n')); setInsertOpen(false) }}>
+              <i className="ti ti-list-numbers" style={{ fontSize: 14 }} />
+              <span>Steps</span>
+            </button>
+            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => insertText(ta, c, '\n<dl class="sc-dl">\n<dt>Term 1</dt>\n<dd>Definition of term 1</dd>\n<dt>Term 2</dt>\n<dd>Definition of term 2</dd>\n<dt>Term 3</dt>\n<dd>Definition of term 3</dd>\n</dl>\n')); setInsertOpen(false) }}>
+              <i className="ti ti-vocabulary" style={{ fontSize: 14 }} />
+              <span>Definition List</span>
+            </button>
+            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => insertText(ta, c, '\n??Hidden answer here??\n')); setInsertOpen(false) }}>
+              <i className="ti ti-brain" style={{ fontSize: 14 }} />
+              <span>Active Recall Block</span>
+            </button>
+
+            <div className="typo-dropdown-label">Typography</div>
+            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => {
+              const s = c.slice(ta.selectionStart, ta.selectionEnd) || 'Lead paragraph text'
+              return insertText(ta, c, `\n<p class="lead">${s}</p>\n`)
+            }); setInsertOpen(false) }}>
+              <i className="ti ti-letter-case" style={{ fontSize: 14 }} />
+              <span>Lead Text</span>
+            </button>
+            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => {
+              const s = c.slice(ta.selectionStart, ta.selectionEnd) || 'Large text'
+              return insertText(ta, c, `\n<div class="text-large">${s}</div>\n`)
+            }); setInsertOpen(false) }}>
+              <i className="ti ti-letter-case-upper" style={{ fontSize: 14 }} />
+              <span>Large Text</span>
+            </button>
+            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => {
+              const s = c.slice(ta.selectionStart, ta.selectionEnd) || 'Small text'
+              return insertText(ta, c, `\n<small>${s}</small>\n`)
+            }); setInsertOpen(false) }}>
+              <i className="ti ti-letter-case-lower" style={{ fontSize: 14 }} />
+              <span>Small Text</span>
+            </button>
+            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => {
+              const s = c.slice(ta.selectionStart, ta.selectionEnd) || 'Muted text'
+              return insertText(ta, c, `\n<p class="text-muted">${s}</p>\n`)
+            }); setInsertOpen(false) }}>
+              <i className="ti ti-eye-off" style={{ fontSize: 14 }} />
+              <span>Muted Text</span>
+            </button>
+
+            <div className="typo-dropdown-label">Embeds</div>
             <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => insertText(ta, c, '\n> [!tip] Tip\n> Your content here\n')); setInsertOpen(false) }}>
               <i className="ti ti-bulb" style={{ fontSize: 14 }} />
               <span>Callout (Tip)</span>
@@ -208,14 +343,6 @@ export default function TypographyToolbar({ textareaRef, content, onContentChang
             <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => insertText(ta, c, '\n> [!warning] Warning\n> Your content here\n')); setInsertOpen(false) }}>
               <i className="ti ti-alert-triangle" style={{ fontSize: 14 }} />
               <span>Callout (Warning)</span>
-            </button>
-            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => insertText(ta, c, '\n> [!toggle] Click to expand\n> Hidden content here\n')); setInsertOpen(false) }}>
-              <i className="ti ti-caret-right" style={{ fontSize: 14 }} />
-              <span>Toggle / Collapsible</span>
-            </button>
-            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => insertText(ta, c, '\n??Hidden answer here??\n')); setInsertOpen(false) }}>
-              <i className="ti ti-brain" style={{ fontSize: 14 }} />
-              <span>Active Recall Block</span>
             </button>
             <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => insertText(ta, c, '\n```mermaid\nflowchart LR\n  A --> B --> C\n```\n')); setInsertOpen(false) }}>
               <i className="ti ti-chart-dots-3" style={{ fontSize: 14 }} />
@@ -228,34 +355,6 @@ export default function TypographyToolbar({ textareaRef, content, onContentChang
             <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => insertText(ta, c, '\n![image](url)\n')); setInsertOpen(false) }}>
               <i className="ti ti-photo" style={{ fontSize: 14 }} />
               <span>Image</span>
-            </button>
-            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => {
-              const selected = c.slice(ta.selectionStart, ta.selectionEnd) || 'Lead paragraph text'
-              return insertText(ta, c, `\n<p class="lead">${selected}</p>\n`)
-            }); setInsertOpen(false) }}>
-              <i className="ti ti-letter-case" style={{ fontSize: 14 }} />
-              <span>Lead Text</span>
-            </button>
-            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => {
-              const selected = c.slice(ta.selectionStart, ta.selectionEnd) || 'Large text'
-              return insertText(ta, c, `\n<div class="text-large">${selected}</div>\n`)
-            }); setInsertOpen(false) }}>
-              <i className="ti ti-letter-case-upper" style={{ fontSize: 14 }} />
-              <span>Large Text</span>
-            </button>
-            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => {
-              const selected = c.slice(ta.selectionStart, ta.selectionEnd) || 'Small text'
-              return insertText(ta, c, `\n<small>${selected}</small>\n`)
-            }); setInsertOpen(false) }}>
-              <i className="ti ti-letter-case-lower" style={{ fontSize: 14 }} />
-              <span>Small Text</span>
-            </button>
-            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => {
-              const selected = c.slice(ta.selectionStart, ta.selectionEnd) || 'Muted helper text'
-              return insertText(ta, c, `\n<p class="text-muted">${selected}</p>\n`)
-            }); setInsertOpen(false) }}>
-              <i className="ti ti-eye-off" style={{ fontSize: 14 }} />
-              <span>Muted Text</span>
             </button>
           </div>
         )}

@@ -334,3 +334,92 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .markdown-body .text-large{font-size:15px;font-weight:600;line-height:1.5;margin:6px 0}
 .markdown-body small{font-size:11px;font-weight:500;line-height:1.4}
 .markdown-body .text-muted{font-size:12px;color:var(--muted);line-height:1.6;margin:4px 0}
+
+/* shadcn component styles */
+.typo-dropdown-wide{width:220px}
+.typo-dropdown-label{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--subtle);padding:8px 8px 3px;margin-top:2px}
+.typo-dropdown-label:first-child{margin-top:0;padding-top:4px}
+
+/* Card */
+.markdown-body .sc-card{border:1px solid var(--border);border-radius:var(--radius);background:var(--card);margin:10px 0;overflow:hidden}
+.markdown-body .sc-card-header{padding:12px 14px 8px}
+.markdown-body .sc-card-title{font-size:14px;font-weight:600;line-height:1.3}
+.markdown-body .sc-card-desc{font-size:11px;color:var(--muted);margin-top:2px}
+.markdown-body .sc-card-content{padding:0 14px 12px;font-size:12px;line-height:1.6}
+.markdown-body .sc-card-footer{padding:8px 14px;border-top:1px solid var(--border);font-size:11px;color:var(--muted)}
+
+/* Alert */
+.markdown-body .sc-alert{display:flex;gap:10px;padding:10px 14px;border-radius:var(--radius);margin:10px 0;font-size:12px;line-height:1.5;border:1px solid}
+.markdown-body .sc-alert i{font-size:16px;flex-shrink:0;margin-top:1px}
+.markdown-body .sc-alert strong{display:block;font-size:12px;margin-bottom:1px}
+.markdown-body .sc-alert-info{background:#eff6ff;border-color:#bfdbfe;color:#1e40af}
+.markdown-body .sc-alert-info i{color:#3b82f6}
+.markdown-body .sc-alert-warning{background:#fefce8;border-color:#fde68a;color:#854d0e}
+.markdown-body .sc-alert-warning i{color:#eab308}
+.markdown-body .sc-alert-error{background:#fef2f2;border-color:#fecaca;color:#991b1b}
+.markdown-body .sc-alert-error i{color:#ef4444}
+.markdown-body .sc-alert-success{background:#f0fdf4;border-color:#bbf7d0;color:#166534}
+.markdown-body .sc-alert-success i{color:#22c55e}
+
+/* Badge */
+.markdown-body .sc-badge{display:inline-flex;align-items:center;padding:1px 7px;border-radius:9999px;font-size:10px;font-weight:500;line-height:1.6;background:var(--text);color:var(--bg);white-space:nowrap}
+.markdown-body .sc-badge-green{background:#166534;color:#f0fdf4}
+.markdown-body .sc-badge-red{background:#991b1b;color:#fef2f2}
+.markdown-body .sc-badge-blue{background:#1e40af;color:#eff6ff}
+.markdown-body .sc-badge-outline{background:transparent;color:var(--text);border:1px solid var(--border)}
+
+/* Kbd */
+.markdown-body kbd{display:inline-flex;align-items:center;padding:1px 5px;border:1px solid var(--border);border-bottom-width:2px;border-radius:4px;font-size:10px;font-family:var(--font);background:var(--surface);color:var(--text);line-height:1.6;white-space:nowrap}
+
+/* Accordion */
+.markdown-body .sc-accordion{border:1px solid var(--border);border-radius:var(--radius);margin:4px 0;overflow:hidden}
+.markdown-body .sc-accordion+.sc-accordion{margin-top:-1px;border-top-left-radius:0;border-top-right-radius:0}
+.markdown-body .sc-accordion summary{padding:8px 12px;font-size:12px;font-weight:500;cursor:pointer;list-style:none;display:flex;align-items:center;gap:6px;user-select:none}
+.markdown-body .sc-accordion summary::-webkit-details-marker{display:none}
+.markdown-body .sc-accordion summary::before{content:'';width:0;height:0;border-left:5px solid var(--muted);border-top:4px solid transparent;border-bottom:4px solid transparent;transition:transform .15s;flex-shrink:0}
+.markdown-body .sc-accordion[open] summary::before{transform:rotate(90deg)}
+.markdown-body .sc-accordion-content{padding:0 12px 10px;font-size:12px;line-height:1.6;border-top:1px solid var(--border)}
+
+/* Tabs (static/visual) */
+.markdown-body .sc-tabs{border:1px solid var(--border);border-radius:var(--radius);margin:10px 0;overflow:hidden}
+.markdown-body .sc-tab-list{display:flex;gap:0;border-bottom:1px solid var(--border);background:var(--surface);padding:0 4px}
+.markdown-body .sc-tab{padding:6px 12px;font-size:11px;font-weight:500;color:var(--muted);cursor:default;border-bottom:2px solid transparent;margin-bottom:-1px}
+.markdown-body .sc-tab.active{color:var(--text);border-bottom-color:var(--text)}
+.markdown-body .sc-tab-content{padding:10px 14px;font-size:12px;line-height:1.6}
+
+/* Progress */
+.markdown-body .sc-progress-wrap{margin:8px 0;display:flex;align-items:center;gap:8px}
+.markdown-body .sc-progress-label{font-size:11px;font-weight:500;flex-shrink:0}
+.markdown-body .sc-progress{flex:1;height:8px;background:var(--surface);border-radius:9999px;overflow:hidden}
+.markdown-body .sc-progress-bar{height:100%;background:var(--text);border-radius:9999px;transition:width .3s}
+.markdown-body .sc-progress-value{font-size:11px;color:var(--muted);flex-shrink:0}
+
+/* Steps */
+.markdown-body .sc-steps{margin:10px 0;padding-left:4px}
+.markdown-body .sc-step{display:flex;gap:10px;position:relative;padding-bottom:16px}
+.markdown-body .sc-step:last-child{padding-bottom:0}
+.markdown-body .sc-step::after{content:'';position:absolute;left:13px;top:26px;bottom:0;width:1px;background:var(--border)}
+.markdown-body .sc-step:last-child::after{display:none}
+.markdown-body .sc-step-num{width:26px;height:26px;border-radius:50%;background:var(--text);color:var(--bg);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0;position:relative;z-index:1}
+.markdown-body .sc-step-body{flex:1;padding-top:2px}
+.markdown-body .sc-step-title{font-size:12px;font-weight:600;line-height:1.4}
+.markdown-body .sc-step-desc{font-size:11px;color:var(--muted);margin-top:2px;line-height:1.5}
+
+/* Definition list */
+.markdown-body .sc-dl{margin:8px 0}
+.markdown-body .sc-dl dt{font-size:12px;font-weight:600;margin-top:8px}
+.markdown-body .sc-dl dt:first-child{margin-top:0}
+.markdown-body .sc-dl dd{font-size:12px;color:var(--muted);margin-left:0;margin-top:2px;padding-left:12px;border-left:2px solid var(--border);line-height:1.6}
+
+/* Separator */
+.markdown-body .sc-separator{height:1px;background:var(--border);margin:12px 0}
+
+/* Columns */
+.markdown-body .sc-columns{display:flex;gap:14px;margin:10px 0}
+.markdown-body .sc-col{flex:1;min-width:0}
+.markdown-body .sc-columns-3 .sc-col{flex:1}
+
+/* Figure */
+.markdown-body .sc-figure{margin:10px 0;text-align:center}
+.markdown-body .sc-figure img{max-width:100%;border-radius:var(--radius);border:1px solid var(--border)}
+.markdown-body .sc-figure figcaption{font-size:11px;color:var(--muted);margin-top:6px;font-style:italic}
