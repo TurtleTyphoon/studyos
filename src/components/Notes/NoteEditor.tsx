@@ -12,6 +12,7 @@ import SlashMenu from './SlashMenu'
 import FloatingToolbar from './FloatingToolbar'
 import CommandPalette from './CommandPalette'
 import BacklinksPanel from './BacklinksPanel'
+import TypographyToolbar from './TypographyToolbar'
 
 interface NoteEditorProps {
   note: Note | null
@@ -479,6 +480,7 @@ export default function NoteEditor({ note, courses, allNotes, onSave, onClose, o
           {mode === 'edit' ? (
             <div className="editor-live-split">
               <div className="editor-write-pane" style={{ position: 'relative' }}>
+                <TypographyToolbar textareaRef={textareaRef} content={content} onContentChange={setContent} />
                 <textarea
                   ref={textareaRef}
                   className="note-editor-textarea"

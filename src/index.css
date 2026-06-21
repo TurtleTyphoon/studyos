@@ -319,3 +319,18 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 
 /* Highlight */
 .markdown-body mark{background:#fef08a;padding:1px 2px;border-radius:2px}
+
+/* Typography toolbar */
+.typo-toolbar{border-bottom:1px solid var(--border);background:var(--surface);padding:3px 6px;display:flex;align-items:center;flex-shrink:0}
+.typo-toolbar-primary{display:flex;align-items:center;gap:1px;flex-wrap:nowrap}
+.typo-btn{background:none;border:none;width:28px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:4px;cursor:pointer;color:var(--muted);font-size:14px;transition:.1s}
+.typo-btn:hover,.typo-btn.active{background:var(--border);color:var(--text)}
+.typo-dropdown{position:absolute;top:100%;right:0;margin-top:4px;background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:4px;width:180px;box-shadow:0 4px 12px rgba(0,0,0,0.08);z-index:110;max-height:300px;overflow-y:auto}
+.typo-dropdown-item{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:4px;cursor:pointer;font-size:11px;width:100%;background:none;border:none;text-align:left;color:var(--text);font-family:var(--font)}
+.typo-dropdown-item:hover{background:var(--surface)}
+
+/* shadcn typography classes in preview */
+.markdown-body .lead{font-size:16px;color:var(--muted);line-height:1.7;margin:8px 0}
+.markdown-body .text-large{font-size:15px;font-weight:600;line-height:1.5;margin:6px 0}
+.markdown-body small{font-size:11px;font-weight:500;line-height:1.4}
+.markdown-body .text-muted{font-size:12px;color:var(--muted);line-height:1.6;margin:4px 0}
