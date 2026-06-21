@@ -230,3 +230,33 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 
 /* Adjust main content to account for timer sidebar */
 .main{margin-right:190px}
+
+/* Node view grid */
+.notes-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+.note-node-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:10px;transition:.15s}
+.note-node-card:hover{border-color:var(--border-strong);box-shadow:0 2px 8px rgba(0,0,0,0.04)}
+
+/* Course detail panel */
+.course-info-panel{display:flex;flex-direction:column;gap:14px}
+.info-section{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:12px}
+.info-section-title{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;margin-bottom:8px;color:var(--text)}
+.info-grid{display:grid;grid-template-columns:90px 1fr;gap:4px 10px;font-size:12px}
+.info-label{color:var(--subtle);font-size:11px}
+.info-value{color:var(--text);font-size:12px}
+.info-edit-form{display:flex;flex-direction:column;gap:6px}
+.info-edit-form input,.info-edit-form textarea{padding:5px 8px;border:1px solid var(--border);border-radius:var(--radius);font-family:var(--font);font-size:12px;outline:none}
+
+/* Learning objectives */
+.objective-row{display:flex;align-items:center;gap:8px;padding:6px 8px;background:#fff;border:1px solid var(--border);border-radius:var(--radius)}
+.objective-row:hover .btn{opacity:1!important}
+.objective-check{width:16px;height:16px;border-radius:3px;border:1.5px solid var(--border);background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;flex-shrink:0;transition:.15s}
+.objective-check.done{background:var(--text);border-color:var(--text);color:#fff}
+.objective-text{flex:1;font-size:12px;line-height:1.4}
+.objective-text.done{text-decoration:line-through;color:var(--subtle)}
+
+/* Assessments */
+.assessment-form{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:10px;display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.assessment-form input,.assessment-form select{padding:5px 8px;border:1px solid var(--border);border-radius:var(--radius);font-family:var(--font);font-size:12px;outline:none}
+.assessment-card{padding:8px 10px;background:#fff;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:4px;transition:.15s}
+.assessment-card:hover{border-color:var(--border-strong)}
+.assessment-card.completed{opacity:0.6}

@@ -35,6 +35,11 @@ export interface Database {
           description: string | null
           weeks: number
           progress: number
+          professor_name: string | null
+          professor_email: string | null
+          office_hours: string | null
+          room: string | null
+          notes_extra: string | null
           created_at: string
         }
         Insert: {
@@ -45,6 +50,11 @@ export interface Database {
           description?: string | null
           weeks?: number
           progress?: number
+          professor_name?: string | null
+          professor_email?: string | null
+          office_hours?: string | null
+          room?: string | null
+          notes_extra?: string | null
         }
         Update: {
           code?: string
@@ -52,6 +62,11 @@ export interface Database {
           description?: string | null
           weeks?: number
           progress?: number
+          professor_name?: string | null
+          professor_email?: string | null
+          office_hours?: string | null
+          room?: string | null
+          notes_extra?: string | null
         }
       }
       notes: {
@@ -130,6 +145,68 @@ export interface Database {
           badge_type?: string
         }
       }
+      learning_objectives: {
+        Row: {
+          id: string
+          user_id: string
+          course_id: string
+          week: number
+          objective: string
+          completed: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          course_id: string
+          week: number
+          objective: string
+          completed?: boolean
+        }
+        Update: {
+          objective?: string
+          completed?: boolean
+        }
+      }
+      assessments: {
+        Row: {
+          id: string
+          user_id: string
+          course_id: string
+          title: string
+          type: string
+          due_date: string | null
+          weight: number | null
+          weeks: number[]
+          description: string | null
+          grade: number | null
+          completed: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          course_id: string
+          title: string
+          type?: string
+          due_date?: string | null
+          weight?: number | null
+          weeks?: number[]
+          description?: string | null
+          grade?: number | null
+          completed?: boolean
+        }
+        Update: {
+          title?: string
+          type?: string
+          due_date?: string | null
+          weight?: number | null
+          weeks?: number[]
+          description?: string | null
+          grade?: number | null
+          completed?: boolean
+        }
+      }
     }
     Views: {
       leaderboard: {
@@ -160,4 +237,6 @@ export type Course = Database['public']['Tables']['courses']['Row']
 export type Note = Database['public']['Tables']['notes']['Row']
 export type QuizAttempt = Database['public']['Tables']['quiz_attempts']['Row']
 export type Badge = Database['public']['Tables']['badges']['Row']
+export type LearningObjective = Database['public']['Tables']['learning_objectives']['Row']
+export type Assessment = Database['public']['Tables']['assessments']['Row']
 export type LeaderboardEntry = Database['public']['Views']['leaderboard']['Row']

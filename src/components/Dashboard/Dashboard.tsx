@@ -14,7 +14,11 @@ const BADGE_DEFS = [
   { type: 'boss_battle', name: 'Boss Battle', icon: 'ti-sword' },
 ]
 
-export default function Dashboard() {
+interface DashboardProps {
+  onViewCourse?: (courseId: string) => void
+}
+
+export default function Dashboard({ onViewCourse }: DashboardProps) {
   const { profile } = useAuth()
   const [courses, setCourses] = useState<Course[]>([])
   const [quizHistory, setQuizHistory] = useState<QuizAttempt[]>([])
@@ -80,8 +84,11 @@ export default function Dashboard() {
           </div>
         )}
         {courses.map(c => (
-          <div key={c.id} className="course-card">
-            <div className="course-tag">{c.code}</div>
+          <div key={c.id} className="course-card" style={{ cursor: 'pointer' }} onClick={() => onViewCourse?.(c.id)}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+              <div className="course-tag">{c.code}</div>
+              {c.professor_name && <span style={{ fontSize: 10, color: 'var(--subtle)' }}>{c.professor_name}</span>}
+            </div>
             <div className="course-name">{c.name}</div>
             <div className="course-desc">{c.description}</div>
             <div className="progress-bar">

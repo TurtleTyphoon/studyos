@@ -7,9 +7,10 @@ interface SidebarProps {
   activePanel: string
   onNavigate: (panel: string) => void
   onFilterByWeek: (courseCode: string, week: number) => void
+  onViewCourse?: (courseId: string) => void
 }
 
-export default function Sidebar({ activePanel, onNavigate, onFilterByWeek }: SidebarProps) {
+export default function Sidebar({ activePanel, onNavigate, onFilterByWeek, onViewCourse }: SidebarProps) {
   const { profile, signOut } = useAuth()
   const [courses, setCourses] = useState<Course[]>([])
   const [openCourses, setOpenCourses] = useState<Set<string>>(new Set())
@@ -82,7 +83,13 @@ export default function Sidebar({ activePanel, onNavigate, onFilterByWeek }: Sid
                   transform: openCourses.has(course.id) ? 'rotate(90deg)' : undefined,
                 }}
               />
-              <span>{course.code}</span>
+              <span
+                onClick={e => { e.stopPropagation(); onViewCourse?.(course.id); onNavigate('dashboard') }}
+                style={{ cursor: 'pointer' }}
+                title="View course details"
+              >
+                {course.code}
+              </span>
             </div>
             <div className={`tree-children ${openCourses.has(course.id) ? 'open' : ''}`}>
               {Array.from({ length: Math.min(course.weeks, 14) }, (_, i) => (

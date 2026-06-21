@@ -27,6 +27,7 @@ export default function NotesPanel({ filterCourse, filterWeek, openNewNote, onNe
   const [search, setSearch] = useState('')
   const [weekFilter, setWeekFilter] = useState<string>('')
   const [editingNote, setEditingNote] = useState<Note | null | 'new'>(null)
+  const [viewMode, setViewMode] = useState<'list' | 'node'>('list')
 
   useEffect(() => {
     loadCourses()
@@ -133,16 +134,68 @@ export default function NotesPanel({ filterCourse, filterWeek, openNewNote, onNe
             <option key={i} value={i + 1}>Week {i + 1}</option>
           ))}
         </select>
+        <div className="note-editor-mode-toggle">
+          <button className={`mode-btn ${viewMode === 'list' ? 'active' : ''}`} onClick={() => setViewMode('list')} title="List view">
+            <i className="ti ti-list" style={{ fontSize: 13 }} />
+          </button>
+          <button className={`mode-btn ${viewMode === 'node' ? 'active' : ''}`} onClick={() => setViewMode('node')} title="Node view">
+            <i className="ti ti-layout-grid" style={{ fontSize: 13 }} />
+          </button>
+        </div>
       </div>
 
-      <div>
-        {filtered.length === 0 ? (
-          <div className="empty-state">
-            <i className="ti ti-notes" />
-            <p>No notes yet. Write your first note or upload a file.</p>
-          </div>
-        ) : (
-          filtered.map(n => (
+      {filtered.length === 0 ? (
+        <div className="empty-state">
+          <i className="ti ti-notes" />
+          <p>No notes yet. Write your first note or upload a file.</p>
+        </div>
+      ) : viewMode === 'node' ? (
+        <div className="notes-grid">
+          {filtered.map(n => (
+            <div
+              key={n.id}
+              className="note-node-card"
+              onClick={() => {
+                if (n.file_type === 'text' || !n.file_type) setEditingNote(n)
+              }}
+              style={{ cursor: n.file_type === 'text' || !n.file_type ? 'pointer' : undefined }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 6 }}>
+                <i className={`ti ${getIcon(n.file_type)}`} style={{ fontSize: 14, color: 'var(--text)' }} />
+                <div style={{ flex: 1 }} />
+                {n.file_url && (
+                  <button className="btn" style={{ padding: '1px 5px', fontSize: 9 }} onClick={e => { e.stopPropagation(); window.open(n.file_url!, '_blank') }}>
+                    <i className="ti ti-external-link" style={{ fontSize: 10 }} />
+                  </button>
+                )}
+                <button className="btn" style={{ padding: '1px 5px', fontSize: 9, color: 'var(--subtle)' }} onClick={e => deleteNote(n.id, e)}>
+                  <i className="ti ti-trash" style={{ fontSize: 10 }} />
+                </button>
+              </div>
+              <div style={{ fontWeight: 600, fontSize: 12, marginBottom: 4, lineHeight: 1.3 }}>{n.title}</div>
+              <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap', marginBottom: 4 }}>
+                <span className="tag">{getCourseName(n.course_id)}</span>
+                {n.week && <span className="tag">Wk {n.week}</span>}
+              </div>
+              {n.concepts.length > 0 && (
+                <div style={{ display: 'flex', gap: 2, flexWrap: 'wrap', marginBottom: 4 }}>
+                  {n.concepts.slice(0, 3).map(c => (
+                    <span key={c} className="pill" style={{ fontSize: 8, padding: '1px 5px' }}>{c}</span>
+                  ))}
+                  {n.concepts.length > 3 && <span style={{ fontSize: 8, color: 'var(--subtle)' }}>+{n.concepts.length - 3}</span>}
+                </div>
+              )}
+              {n.content && (
+                <div style={{ fontSize: 10, color: 'var(--muted)', lineHeight: 1.4, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 4, WebkitBoxOrient: 'vertical' as const }}>
+                  {n.content.substring(0, 200)}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div>
+          {filtered.map(n => (
             <div
               key={n.id}
               className="note-card"
@@ -186,9 +239,9 @@ export default function NotesPanel({ filterCourse, filterWeek, openNewNote, onNe
                 </div>
               )}
             </div>
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
