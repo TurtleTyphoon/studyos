@@ -478,42 +478,33 @@ export default function NoteEditor({ note, courses, allNotes, onSave, onClose, o
 
         <div className="note-editor-main-pane" style={{ position: 'relative' }}>
           {mode === 'edit' ? (
-            <div className="editor-live-split">
-              <div className="editor-write-pane" style={{ position: 'relative' }}>
-                <TypographyToolbar textareaRef={textareaRef} content={content} onContentChange={setContent} />
-                <textarea
-                  ref={textareaRef}
-                  className="note-editor-textarea"
-                  placeholder={'Start writing... (Markdown supported)\n\nShortcuts:\n  /             Slash commands\n  Cmd+K         Command palette\n  ?? answer ??  Active recall\n  [[Note]]      Link notes\n  #tag          Inline tag\n  $math$        LaTeX math\n  ==text==      Highlight\n  > [!tip]      Callout block\n  > [!toggle]   Collapsible section\n  ```mermaid    Diagrams'}
-                  value={content}
-                  onChange={handleTextareaChange}
-                  onPaste={handlePaste}
-                  spellCheck
-                />
-                {uploadingImage && (
-                  <div style={{ position: 'absolute', bottom: 8, right: 8, fontSize: 10, color: 'var(--subtle)', display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <i className="ti ti-loader-2" style={{ fontSize: 11, animation: 'spin 1s linear infinite' }} />Uploading...
-                  </div>
-                )}
-                <FloatingToolbar textareaRef={textareaRef} content={content} onContentChange={setContent} />
-                <SlashMenu visible={showSlash} query={slashQuery} position={slashPos} onSelect={handleSlashSelect} onClose={() => setShowSlash(false)} />
-                {showLinkSuggest && linkSuggestions.length > 0 && (
-                  <div className="link-suggest" style={{ top: linkPos.top, left: linkPos.left }}>
-                    {linkSuggestions.map(n => (
-                      <div key={n.id} className="link-suggest-item" onClick={() => insertLink(n.title)}>
-                        <i className="ti ti-file-text" style={{ fontSize: 11, color: 'var(--subtle)' }} />{n.title}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <div className="editor-preview-pane markdown-body">
-                {content ? (
-                  renderMarkdownWithFeatures(content, allNotes, onOpenNote, false)
-                ) : (
-                  <p style={{ color: 'var(--subtle)', fontSize: 11 }}>Live preview</p>
-                )}
-              </div>
+            <div className="editor-write-pane" style={{ position: 'relative' }}>
+              <TypographyToolbar textareaRef={textareaRef} content={content} onContentChange={setContent} />
+              <textarea
+                ref={textareaRef}
+                className="note-editor-textarea"
+                placeholder={'Start writing... (Markdown supported)\n\nShortcuts:\n  /             Slash commands\n  Cmd+K         Command palette\n  ?? answer ??  Active recall\n  [[Note]]      Link notes\n  #tag          Inline tag\n  $math$        LaTeX math\n  ==text==      Highlight\n  > [!tip]      Callout block\n  > [!toggle]   Collapsible section\n  ```mermaid    Diagrams'}
+                value={content}
+                onChange={handleTextareaChange}
+                onPaste={handlePaste}
+                spellCheck
+              />
+              {uploadingImage && (
+                <div style={{ position: 'absolute', bottom: 8, right: 8, fontSize: 10, color: 'var(--subtle)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <i className="ti ti-loader-2" style={{ fontSize: 11, animation: 'spin 1s linear infinite' }} />Uploading...
+                </div>
+              )}
+              <FloatingToolbar textareaRef={textareaRef} content={content} onContentChange={setContent} />
+              <SlashMenu visible={showSlash} query={slashQuery} position={slashPos} onSelect={handleSlashSelect} onClose={() => setShowSlash(false)} />
+              {showLinkSuggest && linkSuggestions.length > 0 && (
+                <div className="link-suggest" style={{ top: linkPos.top, left: linkPos.left }}>
+                  {linkSuggestions.map(n => (
+                    <div key={n.id} className="link-suggest-item" onClick={() => insertLink(n.title)}>
+                      <i className="ti ti-file-text" style={{ fontSize: 11, color: 'var(--subtle)' }} />{n.title}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           ) : (
             <div className="note-editor-preview markdown-body">
