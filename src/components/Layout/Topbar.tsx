@@ -1,10 +1,11 @@
 interface TopbarProps {
   title: string
   onAddCourse: () => void
-  onAddNote: () => void
+  onNewNote: () => void
+  onUploadFile: () => void
 }
 
-export default function Topbar({ title, onAddCourse, onAddNote }: TopbarProps) {
+export default function Topbar({ title, onAddCourse, onNewNote, onUploadFile }: TopbarProps) {
   return (
     <div className="topbar">
       <div className="page-title">{title}</div>
@@ -12,8 +13,11 @@ export default function Topbar({ title, onAddCourse, onAddNote }: TopbarProps) {
         <button className="btn" onClick={onAddCourse}>
           <i className="ti ti-plus" />Add Course
         </button>
-        <button className="btn btn-accent" onClick={onAddNote}>
-          <i className="ti ti-upload" />Upload Note
+        <button className="btn" onClick={onUploadFile}>
+          <i className="ti ti-upload" />Upload File
+        </button>
+        <button className="btn btn-accent" onClick={onNewNote}>
+          <i className="ti ti-pencil-plus" />Write Note
         </button>
       </div>
     </div>

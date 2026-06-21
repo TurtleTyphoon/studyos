@@ -6,6 +6,8 @@ import NoteEditor from './NoteEditor'
 interface NotesPanelProps {
   filterCourse?: string
   filterWeek?: number
+  openNewNote?: boolean
+  onNewNoteClosed?: () => void
 }
 
 type FileTypeIcon = Record<string, string>
@@ -18,7 +20,7 @@ const FILE_ICONS: FileTypeIcon = {
   spreadsheet: 'ti-file-spreadsheet',
 }
 
-export default function NotesPanel({ filterCourse, filterWeek }: NotesPanelProps) {
+export default function NotesPanel({ filterCourse, filterWeek, openNewNote, onNewNoteClosed }: NotesPanelProps) {
   const [notes, setNotes] = useState<Note[]>([])
   const [courses, setCourses] = useState<Course[]>([])
   const [activeCourse, setActiveCourse] = useState<string>('All')
@@ -35,6 +37,10 @@ export default function NotesPanel({ filterCourse, filterWeek }: NotesPanelProps
     if (filterCourse) setActiveCourse(filterCourse)
     if (filterWeek) setWeekFilter(String(filterWeek))
   }, [filterCourse, filterWeek])
+
+  useEffect(() => {
+    if (openNewNote) setEditingNote('new')
+  }, [openNewNote])
 
   async function loadCourses() {
     const { data } = await supabase.from('courses').select('*').order('code')
@@ -80,7 +86,7 @@ export default function NotesPanel({ filterCourse, filterWeek }: NotesPanelProps
         note={editingNote === 'new' ? null : editingNote}
         courses={courses}
         onSave={() => loadNotes()}
-        onClose={() => setEditingNote(null)}
+        onClose={() => { setEditingNote(null); onNewNoteClosed?.() }}
       />
     )
   }

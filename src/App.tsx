@@ -15,7 +15,8 @@ function AppInner() {
   const { user, loading } = useAuth()
   const [activePanel, setActivePanel] = useState('dashboard')
   const [showAddCourse, setShowAddCourse] = useState(false)
-  const [showAddNote, setShowAddNote] = useState(false)
+  const [showUploadFile, setShowUploadFile] = useState(false)
+  const [openNewNote, setOpenNewNote] = useState(false)
   const [toast, setToast] = useState('')
   const [noteFilter, setNoteFilter] = useState<{ course?: string; week?: number }>({})
 
@@ -23,6 +24,11 @@ function AppInner() {
     setNoteFilter({ course: courseCode, week })
     setActivePanel('notes')
   }, [])
+
+  function handleNewNote() {
+    setActivePanel('notes')
+    setOpenNewNote(true)
+  }
 
   if (loading) {
     return (
@@ -53,19 +59,27 @@ function AppInner() {
         <Topbar
           title={titles[activePanel] ?? activePanel}
           onAddCourse={() => setShowAddCourse(true)}
-          onAddNote={() => setShowAddNote(true)}
+          onNewNote={handleNewNote}
+          onUploadFile={() => setShowUploadFile(true)}
         />
 
         <div className="content">
           {activePanel === 'dashboard' && <Dashboard />}
           {activePanel === 'quiz' && <QuizPanel />}
-          {activePanel === 'notes' && <NotesPanel filterCourse={noteFilter.course} filterWeek={noteFilter.week} />}
+          {activePanel === 'notes' && (
+            <NotesPanel
+              filterCourse={noteFilter.course}
+              filterWeek={noteFilter.week}
+              openNewNote={openNewNote}
+              onNewNoteClosed={() => setOpenNewNote(false)}
+            />
+          )}
           {activePanel === 'leaderboard' && <LeaderboardPanel />}
         </div>
       </div>
 
       <AddCourseModal open={showAddCourse} onClose={() => setShowAddCourse(false)} onSuccess={setToast} />
-      <AddNoteModal open={showAddNote} onClose={() => setShowAddNote(false)} onSuccess={setToast} />
+      <AddNoteModal open={showUploadFile} onClose={() => setShowUploadFile(false)} onSuccess={setToast} />
       {toast && <Toast message={toast} onClose={() => setToast('')} />}
     </div>
   )
