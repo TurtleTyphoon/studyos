@@ -17,7 +17,6 @@ export default function AddNoteModal({ open, onClose, onSuccess }: Props) {
   const [courseId, setCourseId] = useState('')
   const [week, setWeek] = useState('')
   const [concepts, setConcepts] = useState('')
-  const [content, setContent] = useState('')
   const [file, setFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
@@ -33,17 +32,20 @@ export default function AddNoteModal({ open, onClose, onSuccess }: Props) {
   function getFileType(f: File): string {
     if (f.type === 'application/pdf') return 'pdf'
     if (f.type.startsWith('image/')) return 'image'
-    return 'text'
+    if (f.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || f.type === 'application/msword') return 'docx'
+    if (f.type === 'application/vnd.openxmlformats-officedocument.presentationml.presentation' || f.type === 'application/vnd.ms-powerpoint') return 'pptx'
+    if (f.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || f.type === 'application/vnd.ms-excel') return 'spreadsheet'
+    return 'file'
   }
 
   async function handleSubmit() {
     if (!title.trim() || !user) return
-    if (!content.trim() && !file) return
+    if (!file) return
 
     setUploading(true)
     let fileUrl: string | null = null
-    let fileType: string | null = file ? getFileType(file) : 'text'
-    let fileName: string | null = file?.name ?? null
+    const fileType = getFileType(file!)
+    const fileName = file!.name
 
     if (file) {
       const ext = file.name.split('.').pop()
@@ -69,7 +71,7 @@ export default function AddNoteModal({ open, onClose, onSuccess }: Props) {
       course_id: courseId || null,
       week: week ? parseInt(week) : null,
       concepts: concepts.split(',').map(c => c.trim()).filter(Boolean),
-      content: content.trim() || null,
+      content: null,
       file_url: fileUrl,
       file_type: fileType,
       file_name: fileName,
@@ -78,7 +80,7 @@ export default function AddNoteModal({ open, onClose, onSuccess }: Props) {
     if (!error) {
       await supabase.rpc('add_xp', { user_uuid: user.id, amount: 15 })
       await refreshProfile()
-      setTitle(''); setCourseId(''); setWeek(''); setConcepts(''); setContent(''); setFile(null)
+      setTitle(''); setCourseId(''); setWeek(''); setConcepts(''); setFile(null)
       if (fileRef.current) fileRef.current.value = ''
       onClose()
       onSuccess('Note saved +15 XP')
@@ -88,8 +90,24 @@ export default function AddNoteModal({ open, onClose, onSuccess }: Props) {
   }
 
   return (
-    <Modal open={open} onClose={onClose} title="Upload Note">
-      <input type="text" placeholder="Note title" value={title} onChange={e => setTitle(e.target.value)} />
+    <Modal open={open} onClose={onClose} title="Upload Course Material">
+      <div style={{ marginBottom: 7 }}>
+        <label style={{ fontSize: 11, color: 'var(--muted)', display: 'block', marginBottom: 4 }}>
+          Select a file (PDF, Word, PowerPoint, Excel, or image)
+        </label>
+        <input
+          ref={fileRef}
+          type="file"
+          accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,image/*"
+          onChange={e => {
+            const f = e.target.files?.[0] ?? null
+            setFile(f)
+            if (f && !title) setTitle(f.name.replace(/\.[^.]+$/, ''))
+          }}
+          style={{ fontSize: 11, color: 'var(--muted)' }}
+        />
+      </div>
+      <input type="text" placeholder="Title" value={title} onChange={e => setTitle(e.target.value)} />
       <select value={courseId} onChange={e => setCourseId(e.target.value)}>
         <option value="">Select course</option>
         {courses.map(c => (
@@ -103,24 +121,10 @@ export default function AddNoteModal({ open, onClose, onSuccess }: Props) {
         ))}
       </select>
       <input type="text" placeholder="Concepts (comma separated)" value={concepts} onChange={e => setConcepts(e.target.value)} />
-      <textarea placeholder="Paste your note content here..." value={content} onChange={e => setContent(e.target.value)} />
-
-      <div style={{ marginBottom: 7 }}>
-        <label style={{ fontSize: 11, color: 'var(--muted)', display: 'block', marginBottom: 4 }}>
-          Attach a file (PDF or image)
-        </label>
-        <input
-          ref={fileRef}
-          type="file"
-          accept=".pdf,image/*"
-          onChange={e => setFile(e.target.files?.[0] ?? null)}
-          style={{ fontSize: 11, color: 'var(--muted)' }}
-        />
-      </div>
 
       <div className="modal-actions">
-        <button className="btn btn-accent" onClick={handleSubmit} disabled={uploading} style={{ flex: 1, justifyContent: 'center' }}>
-          {uploading ? 'Uploading...' : 'Save Note'}
+        <button className="btn btn-accent" onClick={handleSubmit} disabled={uploading || !file} style={{ flex: 1, justifyContent: 'center' }}>
+          {uploading ? 'Uploading...' : 'Upload'}
         </button>
         <button className="btn" onClick={onClose} style={{ flex: 1, justifyContent: 'center' }}>Cancel</button>
       </div>

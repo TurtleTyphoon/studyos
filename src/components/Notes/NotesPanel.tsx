@@ -1,10 +1,21 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import type { Note, Course } from '../../types/database'
+import NoteEditor from './NoteEditor'
 
 interface NotesPanelProps {
   filterCourse?: string
   filterWeek?: number
+}
+
+type FileTypeIcon = Record<string, string>
+const FILE_ICONS: FileTypeIcon = {
+  text: 'ti-file-text',
+  pdf: 'ti-file-type-pdf',
+  image: 'ti-photo',
+  docx: 'ti-file-type-doc',
+  pptx: 'ti-file-type-ppt',
+  spreadsheet: 'ti-file-spreadsheet',
 }
 
 export default function NotesPanel({ filterCourse, filterWeek }: NotesPanelProps) {
@@ -13,6 +24,7 @@ export default function NotesPanel({ filterCourse, filterWeek }: NotesPanelProps
   const [activeCourse, setActiveCourse] = useState<string>('All')
   const [search, setSearch] = useState('')
   const [weekFilter, setWeekFilter] = useState<string>('')
+  const [editingNote, setEditingNote] = useState<Note | null | 'new'>(null)
 
   useEffect(() => {
     loadCourses()
@@ -52,22 +64,44 @@ export default function NotesPanel({ filterCourse, filterWeek }: NotesPanelProps
     return courses.find(c => c.id === courseId)?.code ?? 'General'
   }
 
-  function openFile(url: string) {
-    window.open(url, '_blank')
+  function getIcon(fileType: string | null) {
+    return FILE_ICONS[fileType ?? 'text'] ?? 'ti-file-text'
+  }
+
+  async function deleteNote(id: string, e: React.MouseEvent) {
+    e.stopPropagation()
+    await supabase.from('notes').delete().eq('id', id)
+    loadNotes()
+  }
+
+  if (editingNote) {
+    return (
+      <NoteEditor
+        note={editingNote === 'new' ? null : editingNote}
+        courses={courses}
+        onSave={() => loadNotes()}
+        onClose={() => setEditingNote(null)}
+      />
+    )
   }
 
   return (
     <div>
-      <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginBottom: 10 }}>
-        {['All', ...courses.map(c => c.code)].map(c => (
-          <div
-            key={c}
-            className={`pill ${activeCourse === c ? 'active' : ''}`}
-            onClick={() => setActiveCourse(c)}
-          >
-            {c}
-          </div>
-        ))}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+        <button className="btn btn-accent" onClick={() => setEditingNote('new')}>
+          <i className="ti ti-pencil-plus" />New Note
+        </button>
+        <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', flex: 1 }}>
+          {['All', ...courses.map(c => c.code)].map(c => (
+            <div
+              key={c}
+              className={`pill ${activeCourse === c ? 'active' : ''}`}
+              onClick={() => setActiveCourse(c)}
+            >
+              {c}
+            </div>
+          ))}
+        </div>
       </div>
 
       <div style={{ display: 'flex', gap: 7, marginBottom: 12 }}>
@@ -97,21 +131,34 @@ export default function NotesPanel({ filterCourse, filterWeek }: NotesPanelProps
         {filtered.length === 0 ? (
           <div className="empty-state">
             <i className="ti ti-notes" />
-            <p>No notes yet. Upload your first note.</p>
+            <p>No notes yet. Write your first note or upload a file.</p>
           </div>
         ) : (
           filtered.map(n => (
-            <div key={n.id} className="note-card">
+            <div
+              key={n.id}
+              className="note-card"
+              style={{ cursor: n.file_type === 'text' || !n.file_type ? 'pointer' : undefined }}
+              onClick={() => {
+                if (n.file_type === 'text' || !n.file_type) setEditingNote(n)
+              }}
+            >
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                <i className={`ti ${n.file_type === 'pdf' ? 'ti-file-type-pdf' : n.file_type === 'image' ? 'ti-photo' : 'ti-file-text'}`} style={{ fontSize: 13, color: 'var(--text)' }} />
+                <i className={`ti ${getIcon(n.file_type)}`} style={{ fontSize: 13, color: 'var(--text)' }} />
                 <div className="note-title-text">{n.title}</div>
                 <div className="tag">{getCourseName(n.course_id)}</div>
                 {n.week && <div className="tag">Wk {n.week}</div>}
+                {n.file_type === 'text' && <div className="tag" style={{ background: 'var(--green-bg)', color: 'var(--green)', border: 'none' }}>Note</div>}
+                {n.file_type && n.file_type !== 'text' && <div className="tag">File</div>}
+                <div style={{ flex: 1 }} />
                 {n.file_url && (
-                  <button className="btn" style={{ padding: '1px 6px', fontSize: 10 }} onClick={() => openFile(n.file_url!)}>
+                  <button className="btn" style={{ padding: '1px 6px', fontSize: 10 }} onClick={e => { e.stopPropagation(); window.open(n.file_url!, '_blank') }}>
                     <i className="ti ti-external-link" style={{ fontSize: 11 }} />
                   </button>
                 )}
+                <button className="btn" style={{ padding: '1px 6px', fontSize: 10, color: 'var(--subtle)' }} onClick={e => deleteNote(n.id, e)}>
+                  <i className="ti ti-trash" style={{ fontSize: 11 }} />
+                </button>
               </div>
               {n.concepts.length > 0 && (
                 <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
@@ -125,9 +172,9 @@ export default function NotesPanel({ filterCourse, filterWeek }: NotesPanelProps
                   {n.content.substring(0, 130)}{n.content.length > 130 ? '...' : ''}
                 </div>
               )}
-              {n.file_type && n.file_type !== 'text' && (
+              {n.file_name && n.file_type !== 'text' && (
                 <div style={{ fontSize: 10, color: 'var(--subtle)', marginTop: 4 }}>
-                  {n.file_name ?? `${n.file_type} attachment`}
+                  {n.file_name}
                 </div>
               )}
             </div>
