@@ -85,8 +85,10 @@ export default function NotesPanel({ filterCourse, filterWeek, openNewNote, onNe
       <NoteEditor
         note={editingNote === 'new' ? null : editingNote}
         courses={courses}
+        allNotes={notes}
         onSave={() => loadNotes()}
         onClose={() => { setEditingNote(null); onNewNoteClosed?.() }}
+        onOpenNote={(n) => setEditingNote(n)}
       />
     )
   }
