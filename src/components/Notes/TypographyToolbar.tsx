@@ -202,9 +202,21 @@ export default function TypographyToolbar({ textareaRef, content, onContentChang
               <i className="ti ti-table" style={{ fontSize: 14 }} />
               <span>Table</span>
             </button>
-            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => insertText(ta, c, '\n<div class="sc-card">\n<div class="sc-card-header">\n<div class="sc-card-title">Card Title</div>\n<div class="sc-card-desc">Card description or subtitle</div>\n</div>\n<div class="sc-card-content">\n\nYour content here.\n\n</div>\n</div>\n')); setInsertOpen(false) }}>
+            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => insertText(ta, c, '\n<div class="sc-card">\n<div class="sc-card-header">\n<div class="sc-card-title">Card Title</div>\n<div class="sc-card-desc">A short description goes here</div>\n</div>\n<div class="sc-card-content">\n\nCard content goes here. You can write **markdown** inside.\n\n</div>\n<div class="sc-card-footer">\n<span class="sc-badge">Label</span>\n</div>\n</div>\n')); setInsertOpen(false) }}>
               <i className="ti ti-layout-cards" style={{ fontSize: 14 }} />
               <span>Card</span>
+            </button>
+            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => insertText(ta, c, '\n<div class="sc-card sc-card-sm">\n<div class="sc-card-header">\n<div class="sc-card-title">Title</div>\n</div>\n<div class="sc-card-content">\n\nCompact card content.\n\n</div>\n</div>\n')); setInsertOpen(false) }}>
+              <i className="ti ti-square" style={{ fontSize: 14 }} />
+              <span>Card (Small)</span>
+            </button>
+            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => insertText(ta, c, '\n<div class="sc-card-row">\n<div class="sc-card">\n<div class="sc-card-header">\n<div class="sc-card-title">Card 1</div>\n<div class="sc-card-desc">Description</div>\n</div>\n<div class="sc-card-content">\n\nContent here.\n\n</div>\n</div>\n<div class="sc-card">\n<div class="sc-card-header">\n<div class="sc-card-title">Card 2</div>\n<div class="sc-card-desc">Description</div>\n</div>\n<div class="sc-card-content">\n\nContent here.\n\n</div>\n</div>\n<div class="sc-card">\n<div class="sc-card-header">\n<div class="sc-card-title">Card 3</div>\n<div class="sc-card-desc">Description</div>\n</div>\n<div class="sc-card-content">\n\nContent here.\n\n</div>\n</div>\n</div>\n')); setInsertOpen(false) }}>
+              <i className="ti ti-columns-3" style={{ fontSize: 14 }} />
+              <span>Card Row (3)</span>
+            </button>
+            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => insertText(ta, c, '\n<div class="sc-card sc-card-accent">\n<div class="sc-card-header">\n<div class="sc-card-action"><span class="sc-badge sc-badge-blue">Important</span></div>\n<div class="sc-card-title">Highlighted Card</div>\n<div class="sc-card-desc">This card stands out with an accent border</div>\n</div>\n<div class="sc-card-content">\n\nKey information or summary goes here.\n\n</div>\n<div class="sc-card-footer">\n\nFooter content or actions.\n\n</div>\n</div>\n')); setInsertOpen(false) }}>
+              <i className="ti ti-star" style={{ fontSize: 14 }} />
+              <span>Card (Accent)</span>
             </button>
             <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => insertText(ta, c, '\n<div class="sc-tabs">\n<div class="sc-tab-list">\n<span class="sc-tab active">Tab 1</span>\n<span class="sc-tab">Tab 2</span>\n<span class="sc-tab">Tab 3</span>\n</div>\n<div class="sc-tab-content">\n\nTab 1 content here.\n\n</div>\n</div>\n')); setInsertOpen(false) }}>
               <i className="ti ti-layout-navbar" style={{ fontSize: 14 }} />

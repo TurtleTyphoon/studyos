@@ -340,12 +340,21 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .typo-dropdown-label:first-child{margin-top:0;padding-top:6px;border-top:none}
 
 /* Card */
-.markdown-body .sc-card{border:1px solid var(--border);border-radius:var(--radius);background:var(--card);margin:10px 0;overflow:hidden}
-.markdown-body .sc-card-header{padding:12px 14px 8px}
-.markdown-body .sc-card-title{font-size:14px;font-weight:600;line-height:1.3}
-.markdown-body .sc-card-desc{font-size:11px;color:var(--muted);margin-top:2px}
-.markdown-body .sc-card-content{padding:0 14px 12px;font-size:12px;line-height:1.6}
-.markdown-body .sc-card-footer{padding:8px 14px;border-top:1px solid var(--border);font-size:11px;color:var(--muted)}
+.markdown-body .sc-card{border:1px solid var(--border);border-radius:var(--radius);background:var(--card);margin:10px 0;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.04)}
+.markdown-body .sc-card-header{padding:16px 18px 0;position:relative}
+.markdown-body .sc-card-title{font-size:15px;font-weight:600;line-height:1.3;letter-spacing:-.2px}
+.markdown-body .sc-card-desc{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.5}
+.markdown-body .sc-card-action{position:absolute;top:16px;right:18px}
+.markdown-body .sc-card-content{padding:14px 18px;font-size:12px;line-height:1.7}
+.markdown-body .sc-card-content:first-child{padding-top:18px}
+.markdown-body .sc-card-footer{padding:12px 18px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);display:flex;align-items:center;gap:8px}
+.markdown-body .sc-card-sm .sc-card-header{padding:12px 14px 0}
+.markdown-body .sc-card-sm .sc-card-title{font-size:13px}
+.markdown-body .sc-card-sm .sc-card-content{padding:10px 14px;font-size:11px}
+.markdown-body .sc-card-sm .sc-card-footer{padding:8px 14px}
+.markdown-body .sc-card-accent{border-left:3px solid var(--text)}
+.markdown-body .sc-card-row{display:flex;gap:10px;margin:10px 0}
+.markdown-body .sc-card-row .sc-card{flex:1;margin:0}
 
 /* Alert */
 .markdown-body .sc-alert{display:flex;gap:10px;padding:10px 14px;border-radius:var(--radius);margin:10px 0;font-size:12px;line-height:1.5;border:1px solid}
