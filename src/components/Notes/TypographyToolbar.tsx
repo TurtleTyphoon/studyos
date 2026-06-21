@@ -6,225 +6,267 @@ interface Props {
   onContentChange: (content: string) => void
 }
 
-interface ToolbarItem {
-  id: string
-  label: string
-  icon: string
-  shortLabel: string
-  action: (textarea: HTMLTextAreaElement, content: string) => { newContent: string; cursorPos: number }
-  group: string
-}
-
-function wrapSelection(textarea: HTMLTextAreaElement, content: string, before: string, after: string): { newContent: string; cursorPos: number } {
+function wrapSelection(textarea: HTMLTextAreaElement, content: string, before: string, after: string) {
   const start = textarea.selectionStart
   const end = textarea.selectionEnd
   const selected = content.slice(start, end)
+
+  if (selected && content.slice(start - before.length, start) === before && content.slice(end, end + after.length) === after) {
+    const newContent = content.slice(0, start - before.length) + selected + content.slice(end + after.length)
+    return { newContent, selStart: start - before.length, selEnd: end - before.length }
+  }
+
   const newContent = content.slice(0, start) + before + selected + after + content.slice(end)
-  return { newContent, cursorPos: selected ? start + before.length + selected.length + after.length : start + before.length }
+  return { newContent, selStart: start + before.length, selEnd: end + before.length }
 }
 
-function wrapLine(textarea: HTMLTextAreaElement, content: string, prefix: string): { newContent: string; cursorPos: number } {
+function prefixLine(textarea: HTMLTextAreaElement, content: string, prefix: string) {
+  const start = textarea.selectionStart
+  const end = textarea.selectionEnd
+
+  let lineStart = content.lastIndexOf('\n', start - 1) + 1
+  let lineEnd = content.indexOf('\n', end)
+  if (lineEnd === -1) lineEnd = content.length
+
+  const lines = content.slice(lineStart, lineEnd).split('\n')
+  const prefixed = lines.map(line => {
+    if (line.startsWith(prefix)) return line.slice(prefix.length)
+    return prefix + line
+  }).join('\n')
+
+  const newContent = content.slice(0, lineStart) + prefixed + content.slice(lineEnd)
+  return { newContent, selStart: lineStart, selEnd: lineStart + prefixed.length }
+}
+
+function insertText(textarea: HTMLTextAreaElement, content: string, text: string) {
+  const pos = textarea.selectionStart
+  const before = content.slice(0, pos)
+  const after = content.slice(textarea.selectionEnd)
+  const pad = before.length > 0 && !before.endsWith('\n') ? '\n' : ''
+  const newContent = before + pad + text + after
+  return { newContent, cursorPos: pos + pad.length + text.length }
+}
+
+function setHeading(textarea: HTMLTextAreaElement, content: string, level: number) {
   const start = textarea.selectionStart
   const lineStart = content.lastIndexOf('\n', start - 1) + 1
   const lineEnd = content.indexOf('\n', start)
   const end = lineEnd === -1 ? content.length : lineEnd
   const line = content.slice(lineStart, end)
-  const newContent = content.slice(0, lineStart) + prefix + line + content.slice(end)
-  return { newContent, cursorPos: lineStart + prefix.length + line.length }
-}
 
-function insertBlock(textarea: HTMLTextAreaElement, content: string, block: string): { newContent: string; cursorPos: number } {
-  const pos = textarea.selectionStart
-  const before = content.slice(0, pos)
-  const after = content.slice(pos)
-  const needsNewline = before.length > 0 && !before.endsWith('\n') ? '\n' : ''
-  const newContent = before + needsNewline + block + after
-  return { newContent, cursorPos: pos + needsNewline.length + block.length }
+  const stripped = line.replace(/^#{1,6}\s*/, '')
+  const prefix = level > 0 ? '#'.repeat(level) + ' ' : ''
+  const newContent = content.slice(0, lineStart) + prefix + stripped + content.slice(end)
+  return { newContent, cursorPos: lineStart + prefix.length + stripped.length }
 }
-
-const ITEMS: ToolbarItem[] = [
-  {
-    id: 'h1', label: 'Heading 1', icon: 'ti-h-1', shortLabel: 'H1', group: 'heading',
-    action: (ta, c) => wrapLine(ta, c, '# '),
-  },
-  {
-    id: 'h2', label: 'Heading 2', icon: 'ti-h-2', shortLabel: 'H2', group: 'heading',
-    action: (ta, c) => wrapLine(ta, c, '## '),
-  },
-  {
-    id: 'h3', label: 'Heading 3', icon: 'ti-h-3', shortLabel: 'H3', group: 'heading',
-    action: (ta, c) => wrapLine(ta, c, '### '),
-  },
-  {
-    id: 'h4', label: 'Heading 4', icon: 'ti-h-4', shortLabel: 'H4', group: 'heading',
-    action: (ta, c) => wrapLine(ta, c, '#### '),
-  },
-  {
-    id: 'bold', label: 'Bold', icon: 'ti-bold', shortLabel: 'B', group: 'inline',
-    action: (ta, c) => wrapSelection(ta, c, '**', '**'),
-  },
-  {
-    id: 'italic', label: 'Italic', icon: 'ti-italic', shortLabel: 'I', group: 'inline',
-    action: (ta, c) => wrapSelection(ta, c, '*', '*'),
-  },
-  {
-    id: 'strikethrough', label: 'Strikethrough', icon: 'ti-strikethrough', shortLabel: 'S', group: 'inline',
-    action: (ta, c) => wrapSelection(ta, c, '~~', '~~'),
-  },
-  {
-    id: 'code', label: 'Inline Code', icon: 'ti-code', shortLabel: '<>', group: 'inline',
-    action: (ta, c) => wrapSelection(ta, c, '`', '`'),
-  },
-  {
-    id: 'highlight', label: 'Highlight', icon: 'ti-highlight', shortLabel: 'HL', group: 'inline',
-    action: (ta, c) => wrapSelection(ta, c, '==', '=='),
-  },
-  {
-    id: 'link', label: 'Link', icon: 'ti-link', shortLabel: 'Lnk', group: 'inline',
-    action: (ta, c) => wrapSelection(ta, c, '[', '](url)'),
-  },
-  {
-    id: 'blockquote', label: 'Blockquote', icon: 'ti-blockquote', shortLabel: '"', group: 'block',
-    action: (ta, c) => wrapLine(ta, c, '> '),
-  },
-  {
-    id: 'lead', label: 'Lead Text', icon: 'ti-letter-case', shortLabel: 'Lead', group: 'block',
-    action: (ta, c) => {
-      const start = ta.selectionStart
-      const end = ta.selectionEnd
-      const selected = c.slice(start, end) || 'Lead paragraph text here'
-      const block = `<p class="lead">${selected}</p>\n`
-      return { newContent: c.slice(0, start) + block + c.slice(end), cursorPos: start + block.length }
-    },
-  },
-  {
-    id: 'large', label: 'Large Text', icon: 'ti-letter-case-upper', shortLabel: 'Lg', group: 'block',
-    action: (ta, c) => {
-      const start = ta.selectionStart
-      const end = ta.selectionEnd
-      const selected = c.slice(start, end) || 'Large text here'
-      const block = `<div class="text-large">${selected}</div>\n`
-      return { newContent: c.slice(0, start) + block + c.slice(end), cursorPos: start + block.length }
-    },
-  },
-  {
-    id: 'small', label: 'Small Text', icon: 'ti-letter-case-lower', shortLabel: 'Sm', group: 'block',
-    action: (ta, c) => {
-      const start = ta.selectionStart
-      const end = ta.selectionEnd
-      const selected = c.slice(start, end) || 'Small text here'
-      const block = `<small>${selected}</small>\n`
-      return { newContent: c.slice(0, start) + block + c.slice(end), cursorPos: start + block.length }
-    },
-  },
-  {
-    id: 'muted', label: 'Muted Text', icon: 'ti-eye-off', shortLabel: 'Mut', group: 'block',
-    action: (ta, c) => {
-      const start = ta.selectionStart
-      const end = ta.selectionEnd
-      const selected = c.slice(start, end) || 'Muted text here'
-      const block = `<p class="text-muted">${selected}</p>\n`
-      return { newContent: c.slice(0, start) + block + c.slice(end), cursorPos: start + block.length }
-    },
-  },
-  {
-    id: 'ul', label: 'Bullet List', icon: 'ti-list', shortLabel: 'UL', group: 'block',
-    action: (ta, c) => insertBlock(ta, c, '\n- Item 1\n- Item 2\n- Item 3\n'),
-  },
-  {
-    id: 'ol', label: 'Numbered List', icon: 'ti-list-numbers', shortLabel: 'OL', group: 'block',
-    action: (ta, c) => insertBlock(ta, c, '\n1. First item\n2. Second item\n3. Third item\n'),
-  },
-  {
-    id: 'checklist', label: 'Checklist', icon: 'ti-checkbox', shortLabel: 'CL', group: 'block',
-    action: (ta, c) => insertBlock(ta, c, '\n- [ ] Task 1\n- [ ] Task 2\n- [ ] Task 3\n'),
-  },
-  {
-    id: 'table', label: 'Table', icon: 'ti-table', shortLabel: 'Tbl', group: 'block',
-    action: (ta, c) => insertBlock(ta, c, '\n| Header | Header | Header |\n|--------|--------|--------|\n| Cell   | Cell   | Cell   |\n| Cell   | Cell   | Cell   |\n'),
-  },
-  {
-    id: 'codeblock', label: 'Code Block', icon: 'ti-source-code', shortLabel: '{;}', group: 'block',
-    action: (ta, c) => insertBlock(ta, c, '\n```\ncode here\n```\n'),
-  },
-  {
-    id: 'hr', label: 'Divider', icon: 'ti-minus', shortLabel: '---', group: 'block',
-    action: (ta, c) => insertBlock(ta, c, '\n---\n'),
-  },
-  {
-    id: 'callout', label: 'Callout', icon: 'ti-info-circle', shortLabel: '!', group: 'block',
-    action: (ta, c) => insertBlock(ta, c, '\n> [!tip] Tip\n> Your tip text here\n'),
-  },
-]
 
 export default function TypographyToolbar({ textareaRef, content, onContentChange }: Props) {
-  const [showMore, setShowMore] = useState(false)
-  const moreRef = useRef<HTMLDivElement>(null)
+  const [headingOpen, setHeadingOpen] = useState(false)
+  const [insertOpen, setInsertOpen] = useState(false)
+  const headingRef = useRef<HTMLDivElement>(null)
+  const insertRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (!showMore) return
-    function handleClick(e: MouseEvent) {
-      if (moreRef.current && !moreRef.current.contains(e.target as Node)) setShowMore(false)
+    function close(e: MouseEvent) {
+      if (headingRef.current && !headingRef.current.contains(e.target as Node)) setHeadingOpen(false)
+      if (insertRef.current && !insertRef.current.contains(e.target as Node)) setInsertOpen(false)
     }
-    document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
-  }, [showMore])
+    document.addEventListener('mousedown', close)
+    return () => document.removeEventListener('mousedown', close)
+  }, [])
 
-  function handleAction(item: ToolbarItem) {
-    const textarea = textareaRef.current
-    if (!textarea) return
-    const { newContent, cursorPos } = item.action(textarea, content)
-    onContentChange(newContent)
-    setShowMore(false)
+  function exec(fn: (ta: HTMLTextAreaElement, c: string) => { newContent: string; selStart?: number; selEnd?: number; cursorPos?: number }) {
+    const ta = textareaRef.current
+    if (!ta) return
+    const result = fn(ta, content)
+    onContentChange(result.newContent)
     setTimeout(() => {
-      textarea.focus()
-      textarea.setSelectionRange(cursorPos, cursorPos)
+      ta.focus()
+      if (result.selStart !== undefined && result.selEnd !== undefined) {
+        ta.setSelectionRange(result.selStart, result.selEnd)
+      } else if (result.cursorPos !== undefined) {
+        ta.setSelectionRange(result.cursorPos, result.cursorPos)
+      }
     }, 0)
   }
 
-  const primary = ITEMS.filter(i => ['h1', 'h2', 'h3', 'h4', 'bold', 'italic', 'code', 'highlight', 'link', 'blockquote', 'ul', 'table'].includes(i.id))
-  const secondary = ITEMS.filter(i => !primary.includes(i))
+  function doHeading(level: number) {
+    exec((ta, c) => setHeading(ta, c, level))
+    setHeadingOpen(false)
+  }
 
   return (
     <div className="typo-toolbar">
-      <div className="typo-toolbar-primary">
-        {primary.map(item => (
-          <button
-            key={item.id}
-            className="typo-btn"
-            onClick={() => handleAction(item)}
-            title={item.label}
-            onMouseDown={e => e.preventDefault()}
-          >
-            <i className={`ti ${item.icon}`} />
-          </button>
-        ))}
-        <div style={{ position: 'relative' }} ref={moreRef}>
-          <button
-            className={`typo-btn ${showMore ? 'active' : ''}`}
-            onClick={() => setShowMore(v => !v)}
-            title="More formatting"
-            onMouseDown={e => e.preventDefault()}
-          >
-            <i className="ti ti-dots" />
-          </button>
-          {showMore && (
-            <div className="typo-dropdown">
-              {secondary.map(item => (
-                <button
-                  key={item.id}
-                  className="typo-dropdown-item"
-                  onClick={() => handleAction(item)}
-                  onMouseDown={e => e.preventDefault()}
-                >
-                  <i className={`ti ${item.icon}`} style={{ fontSize: 13, width: 18, textAlign: 'center' }} />
-                  <span>{item.label}</span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+      {/* Heading dropdown */}
+      <div className="typo-group" ref={headingRef}>
+        <button className="typo-btn typo-btn-wide" onClick={() => setHeadingOpen(v => !v)} onMouseDown={e => e.preventDefault()} title="Heading">
+          <i className="ti ti-heading" />
+          <i className="ti ti-chevron-down" style={{ fontSize: 9, marginLeft: 2 }} />
+        </button>
+        {headingOpen && (
+          <div className="typo-dropdown">
+            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => doHeading(0)}>
+              <span style={{ fontSize: 12 }}>Normal text</span>
+            </button>
+            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => doHeading(1)}>
+              <span style={{ fontSize: 18, fontWeight: 700 }}>Heading 1</span>
+            </button>
+            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => doHeading(2)}>
+              <span style={{ fontSize: 16, fontWeight: 600 }}>Heading 2</span>
+            </button>
+            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => doHeading(3)}>
+              <span style={{ fontSize: 14, fontWeight: 600 }}>Heading 3</span>
+            </button>
+            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => doHeading(4)}>
+              <span style={{ fontSize: 12, fontWeight: 600 }}>Heading 4</span>
+            </button>
+          </div>
+        )}
       </div>
+
+      <div className="typo-sep" />
+
+      {/* Inline formatting */}
+      <div className="typo-group">
+        <button className="typo-btn" title="Bold (Cmd+B)" onMouseDown={e => e.preventDefault()} onClick={() => exec((ta, c) => wrapSelection(ta, c, '**', '**'))}>
+          <i className="ti ti-bold" />
+        </button>
+        <button className="typo-btn" title="Italic (Cmd+I)" onMouseDown={e => e.preventDefault()} onClick={() => exec((ta, c) => wrapSelection(ta, c, '*', '*'))}>
+          <i className="ti ti-italic" />
+        </button>
+        <button className="typo-btn" title="Underline" onMouseDown={e => e.preventDefault()} onClick={() => exec((ta, c) => wrapSelection(ta, c, '<u>', '</u>'))}>
+          <i className="ti ti-underline" />
+        </button>
+        <button className="typo-btn" title="Strikethrough" onMouseDown={e => e.preventDefault()} onClick={() => exec((ta, c) => wrapSelection(ta, c, '~~', '~~'))}>
+          <i className="ti ti-strikethrough" />
+        </button>
+        <button className="typo-btn" title="Highlight" onMouseDown={e => e.preventDefault()} onClick={() => exec((ta, c) => wrapSelection(ta, c, '==', '=='))}>
+          <i className="ti ti-highlight" />
+        </button>
+      </div>
+
+      <div className="typo-sep" />
+
+      {/* Code */}
+      <div className="typo-group">
+        <button className="typo-btn" title="Inline Code" onMouseDown={e => e.preventDefault()} onClick={() => exec((ta, c) => wrapSelection(ta, c, '`', '`'))}>
+          <i className="ti ti-code" />
+        </button>
+        <button className="typo-btn" title="Code Block" onMouseDown={e => e.preventDefault()} onClick={() => exec((ta, c) => insertText(ta, c, '\n```\n\n```\n'))}>
+          <i className="ti ti-source-code" />
+        </button>
+      </div>
+
+      <div className="typo-sep" />
+
+      {/* Lists */}
+      <div className="typo-group">
+        <button className="typo-btn" title="Bullet List" onMouseDown={e => e.preventDefault()} onClick={() => exec((ta, c) => prefixLine(ta, c, '- '))}>
+          <i className="ti ti-list" />
+        </button>
+        <button className="typo-btn" title="Numbered List" onMouseDown={e => e.preventDefault()} onClick={() => exec((ta, c) => prefixLine(ta, c, '1. '))}>
+          <i className="ti ti-list-numbers" />
+        </button>
+        <button className="typo-btn" title="Checklist" onMouseDown={e => e.preventDefault()} onClick={() => exec((ta, c) => prefixLine(ta, c, '- [ ] '))}>
+          <i className="ti ti-checkbox" />
+        </button>
+      </div>
+
+      <div className="typo-sep" />
+
+      {/* Block elements */}
+      <div className="typo-group">
+        <button className="typo-btn" title="Blockquote" onMouseDown={e => e.preventDefault()} onClick={() => exec((ta, c) => prefixLine(ta, c, '> '))}>
+          <i className="ti ti-blockquote" />
+        </button>
+        <button className="typo-btn" title="Link" onMouseDown={e => e.preventDefault()} onClick={() => exec((ta, c) => wrapSelection(ta, c, '[', '](url)'))}>
+          <i className="ti ti-link" />
+        </button>
+        <button className="typo-btn" title="Divider" onMouseDown={e => e.preventDefault()} onClick={() => exec((ta, c) => insertText(ta, c, '\n---\n'))}>
+          <i className="ti ti-minus" />
+        </button>
+      </div>
+
+      <div className="typo-sep" />
+
+      {/* Insert dropdown */}
+      <div className="typo-group" ref={insertRef}>
+        <button className="typo-btn typo-btn-wide" onClick={() => setInsertOpen(v => !v)} onMouseDown={e => e.preventDefault()} title="Insert block">
+          <i className="ti ti-plus" />
+          <i className="ti ti-chevron-down" style={{ fontSize: 9, marginLeft: 2 }} />
+        </button>
+        {insertOpen && (
+          <div className="typo-dropdown">
+            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => insertText(ta, c, '\n| Header | Header | Header |\n|--------|--------|--------|\n| Cell   | Cell   | Cell   |\n| Cell   | Cell   | Cell   |\n')); setInsertOpen(false) }}>
+              <i className="ti ti-table" style={{ fontSize: 14 }} />
+              <span>Table</span>
+            </button>
+            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => insertText(ta, c, '\n> [!tip] Tip\n> Your content here\n')); setInsertOpen(false) }}>
+              <i className="ti ti-bulb" style={{ fontSize: 14 }} />
+              <span>Callout (Tip)</span>
+            </button>
+            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => insertText(ta, c, '\n> [!warning] Warning\n> Your content here\n')); setInsertOpen(false) }}>
+              <i className="ti ti-alert-triangle" style={{ fontSize: 14 }} />
+              <span>Callout (Warning)</span>
+            </button>
+            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => insertText(ta, c, '\n> [!toggle] Click to expand\n> Hidden content here\n')); setInsertOpen(false) }}>
+              <i className="ti ti-caret-right" style={{ fontSize: 14 }} />
+              <span>Toggle / Collapsible</span>
+            </button>
+            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => insertText(ta, c, '\n??Hidden answer here??\n')); setInsertOpen(false) }}>
+              <i className="ti ti-brain" style={{ fontSize: 14 }} />
+              <span>Active Recall Block</span>
+            </button>
+            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => insertText(ta, c, '\n```mermaid\nflowchart LR\n  A --> B --> C\n```\n')); setInsertOpen(false) }}>
+              <i className="ti ti-chart-dots-3" style={{ fontSize: 14 }} />
+              <span>Mermaid Diagram</span>
+            </button>
+            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => insertText(ta, c, '\n$$\n\\int_0^1 f(x)\\,dx\n$$\n')); setInsertOpen(false) }}>
+              <i className="ti ti-math" style={{ fontSize: 14 }} />
+              <span>Math Block</span>
+            </button>
+            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => insertText(ta, c, '\n![image](url)\n')); setInsertOpen(false) }}>
+              <i className="ti ti-photo" style={{ fontSize: 14 }} />
+              <span>Image</span>
+            </button>
+            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => {
+              const selected = c.slice(ta.selectionStart, ta.selectionEnd) || 'Lead paragraph text'
+              return insertText(ta, c, `\n<p class="lead">${selected}</p>\n`)
+            }); setInsertOpen(false) }}>
+              <i className="ti ti-letter-case" style={{ fontSize: 14 }} />
+              <span>Lead Text</span>
+            </button>
+            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => {
+              const selected = c.slice(ta.selectionStart, ta.selectionEnd) || 'Large text'
+              return insertText(ta, c, `\n<div class="text-large">${selected}</div>\n`)
+            }); setInsertOpen(false) }}>
+              <i className="ti ti-letter-case-upper" style={{ fontSize: 14 }} />
+              <span>Large Text</span>
+            </button>
+            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => {
+              const selected = c.slice(ta.selectionStart, ta.selectionEnd) || 'Small text'
+              return insertText(ta, c, `\n<small>${selected}</small>\n`)
+            }); setInsertOpen(false) }}>
+              <i className="ti ti-letter-case-lower" style={{ fontSize: 14 }} />
+              <span>Small Text</span>
+            </button>
+            <button className="typo-dropdown-item" onMouseDown={e => e.preventDefault()} onClick={() => { exec((ta, c) => {
+              const selected = c.slice(ta.selectionStart, ta.selectionEnd) || 'Muted helper text'
+              return insertText(ta, c, `\n<p class="text-muted">${selected}</p>\n`)
+            }); setInsertOpen(false) }}>
+              <i className="ti ti-eye-off" style={{ fontSize: 14 }} />
+              <span>Muted Text</span>
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div className="typo-sep" />
+
+      {/* Math inline */}
+      <button className="typo-btn" title="Inline Math" onMouseDown={e => e.preventDefault()} onClick={() => exec((ta, c) => wrapSelection(ta, c, '$', '$'))}>
+        <i className="ti ti-math" />
+      </button>
     </div>
   )
 }
