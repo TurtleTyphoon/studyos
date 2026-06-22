@@ -444,16 +444,164 @@ function RenderBlock({ block, update, opts }: { block: Block; update: (d: any) =
   }
 }
 
-/* ---- block type label ---- */
+/* ---- block info helpers ---- */
 
-function blockLabel(type: string): string {
-  const map: Record<string, string> = {
-    text: 'Text', heading: 'Heading', 'bullet-list': 'Bullet List', 'number-list': 'Numbered List',
-    checklist: 'Checklist', quote: 'Quote', divider: 'Divider', code: 'Code', callout: 'Callout',
-    card: 'Card', alert: 'Alert', accordion: 'Accordion', steps: 'Steps', progress: 'Progress',
-    columns: 'Columns', table: 'Table', recall: 'Recall', image: 'Image',
+const BLOCK_META: Record<string, { label: string; icon: string }> = {
+  text: { label: 'Text', icon: 'ti-align-left' },
+  heading: { label: 'Heading', icon: 'ti-heading' },
+  'bullet-list': { label: 'Bullet List', icon: 'ti-list' },
+  'number-list': { label: 'Numbered List', icon: 'ti-list-numbers' },
+  checklist: { label: 'Checklist', icon: 'ti-checkbox' },
+  quote: { label: 'Quote', icon: 'ti-blockquote' },
+  divider: { label: 'Divider', icon: 'ti-minus' },
+  code: { label: 'Code', icon: 'ti-code' },
+  callout: { label: 'Callout', icon: 'ti-info-circle' },
+  card: { label: 'Card', icon: 'ti-layout-cards' },
+  alert: { label: 'Alert', icon: 'ti-alert-circle' },
+  accordion: { label: 'Accordion', icon: 'ti-layout-bottombar-collapse' },
+  steps: { label: 'Steps', icon: 'ti-list-check' },
+  progress: { label: 'Progress', icon: 'ti-chart-bar' },
+  columns: { label: 'Columns', icon: 'ti-columns-2' },
+  table: { label: 'Table', icon: 'ti-table' },
+  recall: { label: 'Active Recall', icon: 'ti-brain' },
+  image: { label: 'Image', icon: 'ti-photo' },
+}
+
+function blockSummary(block: Block): string {
+  switch (block.type) {
+    case 'text': return block.content?.slice(0, 50) || 'Empty text'
+    case 'heading': return block.content || `Heading ${block.level}`
+    case 'bullet-list': case 'number-list': return `${block.items.length} item${block.items.length !== 1 ? 's' : ''}`
+    case 'checklist': { const done = block.items.filter(i => i.checked).length; return `${done}/${block.items.length} done` }
+    case 'quote': return block.content?.slice(0, 40) || 'Empty quote'
+    case 'divider': return 'Horizontal rule'
+    case 'code': return block.language || 'Code block'
+    case 'callout': return block.title || block.variant
+    case 'card': return block.title || 'Untitled card'
+    case 'alert': return `${block.variant}: ${block.title}`
+    case 'accordion': return `${block.items.length} section${block.items.length !== 1 ? 's' : ''}`
+    case 'steps': return `${block.steps.length} step${block.steps.length !== 1 ? 's' : ''}`
+    case 'progress': return `${block.label} - ${block.value}%`
+    case 'columns': return `${block.count} columns`
+    case 'table': return `${block.headers.length}x${block.rows.length} table`
+    case 'recall': return block.content?.slice(0, 40) || 'Hidden answer'
+    case 'image': return block.caption || block.url?.slice(0, 40) || 'No image'
+    default: return ''
   }
-  return map[type] || type
+}
+
+/* ---- preview renderer ---- */
+
+function PreviewBlock({ block }: { block: Block }) {
+  const meta = BLOCK_META[block.type]
+  switch (block.type) {
+    case 'text': return block.content ? <p className="bp-text">{block.content}</p> : <p className="bp-empty">Text block</p>
+    case 'heading': {
+      const text = block.content || meta?.label || 'Heading'
+      const cls = block.content ? 'bp-heading' : 'bp-heading bp-empty'
+      if (block.level === 1) return <h1 className={cls}>{text}</h1>
+      if (block.level === 2) return <h2 className={cls}>{text}</h2>
+      if (block.level === 3) return <h3 className={cls}>{text}</h3>
+      return <h4 className={cls}>{text}</h4>
+    }
+    case 'bullet-list': return <ul className="bp-list">{block.items.map((item, i) => <li key={i}>{item || <span className="bp-empty">Item</span>}</li>)}</ul>
+    case 'number-list': return <ol className="bp-list">{block.items.map((item, i) => <li key={i}>{item || <span className="bp-empty">Item</span>}</li>)}</ol>
+    case 'checklist': return (
+      <div className="bp-checklist">
+        {block.items.map((item, i) => (
+          <label key={i} className="bp-check-row">
+            <input type="checkbox" checked={item.checked} readOnly />
+            <span className={item.checked ? 'bp-done' : ''}>{item.text || 'Task'}</span>
+          </label>
+        ))}
+      </div>
+    )
+    case 'quote': return <blockquote className="bp-quote">{block.content || 'Quote'}</blockquote>
+    case 'divider': return <hr className="bp-hr" />
+    case 'code': return (
+      <div className="bp-code">
+        {block.language && <div className="bp-code-lang">{block.language}</div>}
+        <pre><code>{block.content || '// code'}</code></pre>
+      </div>
+    )
+    case 'callout': {
+      const colors: Record<string, string> = { tip: 'var(--green)', note: '#2563eb', warning: 'var(--yellow)', important: 'var(--red)', info: '#2563eb', example: '#7c3aed', question: '#d97706' }
+      const bgs: Record<string, string> = { tip: 'var(--green-bg)', note: '#eff6ff', warning: 'var(--yellow-bg)', important: 'var(--red-bg)', info: '#eff6ff', example: '#f5f3ff', question: '#fffbeb' }
+      return (
+        <div className="bp-callout" style={{ borderLeftColor: colors[block.variant] || '#2563eb', background: bgs[block.variant] || '#eff6ff' }}>
+          <strong style={{ color: colors[block.variant] }}>{block.title || block.variant}</strong>
+          <p>{block.content}</p>
+        </div>
+      )
+    }
+    case 'card': return (
+      <div className="bp-card">
+        {block.title && <div className="bp-card-title">{block.title}</div>}
+        {block.description && <div className="bp-card-desc">{block.description}</div>}
+        {block.content && <div className="bp-card-body">{block.content}</div>}
+      </div>
+    )
+    case 'alert': {
+      const icons: Record<string, string> = { info: 'ti-info-circle', warning: 'ti-alert-triangle', error: 'ti-alert-octagon', success: 'ti-circle-check' }
+      const bgs: Record<string, string> = { info: '#eff6ff', warning: '#fefce8', error: '#fef2f2', success: '#f0fdf4' }
+      const borders: Record<string, string> = { info: '#bfdbfe', warning: '#fde68a', error: '#fecaca', success: '#bbf7d0' }
+      return (
+        <div className="bp-alert" style={{ background: bgs[block.variant], borderColor: borders[block.variant] }}>
+          <i className={`ti ${icons[block.variant]}`} />
+          <div><strong>{block.title}</strong><br />{block.content}</div>
+        </div>
+      )
+    }
+    case 'accordion': return (
+      <div className="bp-accordion">
+        {block.items.map((item, i) => (
+          <details key={i} className="bp-acc-item">
+            <summary>{item.title || 'Section'}</summary>
+            <p>{item.content}</p>
+          </details>
+        ))}
+      </div>
+    )
+    case 'steps': return (
+      <div className="bp-steps">
+        {block.steps.map((step, i) => (
+          <div key={i} className="bp-step">
+            <div className="bp-step-num">{i + 1}</div>
+            <div><strong>{step.title}</strong><br /><span className="bp-step-desc">{step.description}</span></div>
+          </div>
+        ))}
+      </div>
+    )
+    case 'progress': return (
+      <div className="bp-progress">
+        <span className="bp-progress-label">{block.label}</span>
+        <div className="bp-progress-track"><div className="bp-progress-fill" style={{ width: `${block.value}%` }} /></div>
+        <span className="bp-progress-val">{block.value}%</span>
+      </div>
+    )
+    case 'columns': return (
+      <div className="bp-columns">{block.columns.map((col, i) => <div key={i} className="bp-col">{col || <span className="bp-empty">Column {i + 1}</span>}</div>)}</div>
+    )
+    case 'table': return (
+      <table className="bp-table">
+        <thead><tr>{block.headers.map((h, i) => <th key={i}>{h || 'Header'}</th>)}</tr></thead>
+        <tbody>{block.rows.map((row, ri) => <tr key={ri}>{row.map((cell, ci) => <td key={ci}>{cell}</td>)}</tr>)}</tbody>
+      </table>
+    )
+    case 'recall': return (
+      <div className="bp-recall">
+        <div className="bp-recall-header"><i className="ti ti-brain" /> Active Recall</div>
+        <div className="bp-recall-hidden">Click to reveal in Study mode</div>
+      </div>
+    )
+    case 'image': return block.url ? (
+      <figure className="bp-figure">
+        <img src={block.url} alt={block.caption} />
+        {block.caption && <figcaption>{block.caption}</figcaption>}
+      </figure>
+    ) : <div className="bp-empty" style={{ padding: 20, textAlign: 'center' }}>No image set</div>
+    default: return null
+  }
 }
 
 /* ---- main component ---- */
@@ -468,6 +616,7 @@ export default function BlockEditor({ content, onContentChange }: Props) {
   const [menuIndex, setMenuIndex] = useState<number | null>(null)
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 })
   const [menuSearch, setMenuSearch] = useState('')
+  const [activeBlock, setActiveBlock] = useState<string | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
   const menuSearchRef = useRef<HTMLInputElement>(null)
   const focusBlockId = useRef<string | null>(null)
@@ -494,6 +643,7 @@ export default function BlockEditor({ content, onContentChange }: Props) {
       const input = el?.querySelector('input, textarea') as HTMLElement
       input?.focus()
       focusBlockId.current = null
+      setActiveBlock(focusBlockId.current)
     }
   })
 
@@ -512,12 +662,14 @@ export default function BlockEditor({ content, onContentChange }: Props) {
     const newBlocks = [...blocks]
     newBlocks.splice(index, 0, newBlock)
     focusBlockId.current = id
+    setActiveBlock(id)
     syncBlocks(newBlocks)
     setMenuIndex(null)
   }
 
   function deleteBlock(id: string) {
     if (blocks.length <= 1) return
+    if (activeBlock === id) setActiveBlock(null)
     syncBlocks(blocks.filter(b => b.id !== id))
   }
 
@@ -534,9 +686,11 @@ export default function BlockEditor({ content, onContentChange }: Props) {
   function duplicateBlock(id: string) {
     const idx = blocks.findIndex(b => b.id === id)
     if (idx < 0) return
-    const clone = { ...JSON.parse(JSON.stringify(blocks[idx])), id: uid() }
+    const newId = uid()
+    const clone = { ...JSON.parse(JSON.stringify(blocks[idx])), id: newId }
     const nb = [...blocks]
     nb.splice(idx + 1, 0, clone)
+    setActiveBlock(newId)
     syncBlocks(nb)
   }
 
@@ -551,33 +705,68 @@ export default function BlockEditor({ content, onContentChange }: Props) {
 
   return (
     <div className="block-editor" ref={containerRef}>
-      <div className="be-blocks">
-        {blocks.map((block, i) => (
-          <div key={block.id} className="be-block-row" data-block-id={block.id}>
-            <div className="be-block-controls">
-              <button className="be-ctrl" onClick={e => openMenu(i, e)} title="Add block"><i className="ti ti-plus" /></button>
-              <div className="be-ctrl be-grab"><i className="ti ti-grip-vertical" /></div>
-            </div>
+      {/* ---- Builder panel (left) ---- */}
+      <div className="be-builder">
+        <div className="be-builder-header">
+          <span>Building Blocks</span>
+          <span className="be-builder-count">{blocks.length} Block{blocks.length !== 1 ? 's' : ''}</span>
+        </div>
 
-            <div className="be-block-content">
-              <div className="be-block-type">{blockLabel(block.type)}</div>
-              <RenderBlock block={block} update={(data: any) => updateBlock(block.id, data)} opts={{ onEnter: () => addBlock(i + 1, { type: 'text', content: '' } as any) }} />
-            </div>
+        <div className="be-builder-list">
+          {blocks.map((block, i) => {
+            const meta = BLOCK_META[block.type] || { label: block.type, icon: 'ti-square' }
+            const isActive = activeBlock === block.id
+            return (
+              <div key={block.id} data-block-id={block.id}>
+                <div className={`be-row ${isActive ? 'be-row-active' : ''}`} onClick={() => setActiveBlock(isActive ? null : block.id)}>
+                  <div className="be-row-grip"><i className="ti ti-grip-vertical" /></div>
+                  <div className="be-row-icon"><i className={`ti ${meta.icon}`} /></div>
+                  <div className="be-row-info">
+                    <div className="be-row-label">{meta.label}</div>
+                    <div className="be-row-summary">{blockSummary(block)}</div>
+                  </div>
+                  <button className="be-row-delete" onClick={e => { e.stopPropagation(); deleteBlock(block.id) }} disabled={blocks.length <= 1} title="Delete block">
+                    <i className="ti ti-trash" />
+                  </button>
+                </div>
 
-            <div className="be-block-actions">
-              <button className="be-ctrl" onClick={() => moveBlock(block.id, -1)} title="Move up" disabled={i === 0}><i className="ti ti-chevron-up" /></button>
-              <button className="be-ctrl" onClick={() => moveBlock(block.id, 1)} title="Move down" disabled={i === blocks.length - 1}><i className="ti ti-chevron-down" /></button>
-              <button className="be-ctrl" onClick={() => duplicateBlock(block.id)} title="Duplicate"><i className="ti ti-copy" /></button>
-              <button className="be-ctrl be-ctrl-del" onClick={() => deleteBlock(block.id)} title="Delete" disabled={blocks.length <= 1}><i className="ti ti-trash" /></button>
-            </div>
-          </div>
-        ))}
+                {isActive && (
+                  <div className="be-row-editor">
+                    <div className="be-row-editor-actions">
+                      <button className="be-ctrl" onClick={() => moveBlock(block.id, -1)} disabled={i === 0} title="Move up"><i className="ti ti-chevron-up" /></button>
+                      <button className="be-ctrl" onClick={() => moveBlock(block.id, 1)} disabled={i === blocks.length - 1} title="Move down"><i className="ti ti-chevron-down" /></button>
+                      <button className="be-ctrl" onClick={() => duplicateBlock(block.id)} title="Duplicate"><i className="ti ti-copy" /></button>
+                    </div>
+                    <RenderBlock block={block} update={(data: any) => updateBlock(block.id, data)} opts={{ onEnter: () => addBlock(i + 1, { type: 'text', content: '' } as any) }} />
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
 
         <button className="be-add-bottom" onClick={e => openMenu(blocks.length, e)}>
           <i className="ti ti-plus" /> Add block
         </button>
       </div>
 
+      {/* ---- Live preview (right) ---- */}
+      <div className="be-preview">
+        <div className="be-preview-header">Preview</div>
+        <div className="be-preview-body">
+          {blocks.map(block => (
+            <div
+              key={block.id}
+              className={`be-preview-block ${activeBlock === block.id ? 'be-preview-highlight' : ''}`}
+              onClick={() => setActiveBlock(block.id)}
+            >
+              <PreviewBlock block={block} />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ---- Add block menu (portal) ---- */}
       {menuIndex !== null && createPortal(
         <div ref={menuRef} className="be-menu" style={{ top: menuPos.top, left: menuPos.left }}>
           <input ref={menuSearchRef} className="be-menu-search" value={menuSearch} onChange={e => setMenuSearch(e.target.value)} placeholder="Search blocks..." onKeyDown={e => { if (e.key === 'Escape') setMenuIndex(null) }} />
