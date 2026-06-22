@@ -836,38 +836,50 @@ function PreviewBlock({ block }: { block: Block }) {
 
 /* ---- main component ---- */
 
-/* ---- editable preview block ---- */
+function getTextFieldKey(block: Block): string | null {
+  switch (block.type) {
+    case 'text': case 'heading': case 'quote': case 'code': case 'callout': case 'card': case 'alert': return 'content'
+    default: return null
+  }
+}
 
-function EditablePreviewBlock({ block, update }: { block: Block; update: (d: any) => void }) {
+/* ---- editable preview block (inline, no per-block toolbar) ---- */
+
+function InlineEditBlock({ block, update, activeRef }: { block: Block; update: (d: any) => void; activeRef: React.MutableRefObject<HTMLTextAreaElement | null> }) {
+  function bindRef(el: HTMLTextAreaElement | null) {
+    if (el) {
+      el.onfocus = () => { activeRef.current = el }
+    }
+  }
+
   switch (block.type) {
     case 'text': return (
-      <div className="bp-editable">
-        <RichTextarea className="bp-edit-text" value={block.content} onChange={v => update({ content: v })} placeholder="Type something..." />
-      </div>
+      <AutoTextarea ref={bindRef} className="ep-text" value={block.content} onChange={v => update({ content: v })} placeholder="Type something..." />
     )
     case 'heading': return (
-      <div className="bp-editable">
-        <RichTextarea className={`bp-edit-heading bp-edit-h${block.level}`} value={block.content} onChange={v => update({ content: v })} placeholder={`Heading ${block.level}`} />
+      <AutoTextarea ref={bindRef} className={`ep-heading ep-h${block.level}`} value={block.content} onChange={v => update({ content: v })} placeholder={`Heading ${block.level}`} />
+    )
+    case 'quote': return (
+      <div className="ep-quote-wrap">
+        <AutoTextarea ref={bindRef} className="ep-quote" value={block.content} onChange={v => update({ content: v })} placeholder="Quote..." />
       </div>
     )
     case 'callout': {
       const colors: Record<string, string> = { tip: 'var(--green)', note: '#2563eb', warning: 'var(--yellow)', important: 'var(--red)', info: '#2563eb', example: '#7c3aed', question: '#d97706' }
       const bgs: Record<string, string> = { tip: 'var(--green-bg)', note: '#eff6ff', warning: 'var(--yellow-bg)', important: 'var(--red-bg)', info: '#eff6ff', example: '#f5f3ff', question: '#fffbeb' }
       return (
-        <div className="bp-callout bp-editable" style={{ borderLeftColor: colors[block.variant] || '#2563eb', background: bgs[block.variant] || '#eff6ff' }}>
-          <input className="bp-edit-callout-title" value={block.title} onChange={e => update({ title: e.target.value })} placeholder="Title" style={{ color: colors[block.variant] }} />
-          <RichTextarea className="bp-edit-callout-body" value={block.content} onChange={v => update({ content: v })} placeholder="Content..." />
+        <div className="ep-callout" style={{ borderLeftColor: colors[block.variant] || '#2563eb', background: bgs[block.variant] || '#eff6ff' }}>
+          <input className="ep-callout-title" value={block.title} onChange={e => update({ title: e.target.value })} placeholder="Title" style={{ color: colors[block.variant] }} />
+          <AutoTextarea ref={bindRef} className="ep-callout-body" value={block.content} onChange={v => update({ content: v })} placeholder="Content..." />
         </div>
       )
     }
     case 'card': return (
-      <div className={`bp-card bp-card-${block.variant || 'default'} bp-editable`}>
-        <div className="bp-card-header">
-          <input className="bp-edit-card-title" value={block.title} onChange={e => update({ title: e.target.value })} placeholder="Card title" />
-          <input className="bp-edit-card-desc" value={block.description} onChange={e => update({ description: e.target.value })} placeholder="Description" />
-        </div>
-        <RichTextarea className="bp-edit-card-body" value={block.content} onChange={v => update({ content: v })} placeholder="Content..." />
-        {(block.footer || true) && <input className="bp-edit-card-footer" value={block.footer || ''} onChange={e => update({ footer: e.target.value })} placeholder="Footer" />}
+      <div className={`ep-card ep-card-${block.variant || 'default'}`}>
+        <input className="ep-card-title" value={block.title} onChange={e => update({ title: e.target.value })} placeholder="Card title" />
+        {block.description !== undefined && <input className="ep-card-desc" value={block.description} onChange={e => update({ description: e.target.value })} placeholder="Description" />}
+        <AutoTextarea ref={bindRef} className="ep-card-body" value={block.content} onChange={v => update({ content: v })} placeholder="Content..." />
+        <input className="ep-card-footer" value={block.footer || ''} onChange={e => update({ footer: e.target.value })} placeholder="Footer" />
       </div>
     )
     case 'alert': {
@@ -875,22 +887,17 @@ function EditablePreviewBlock({ block, update }: { block: Block; update: (d: any
       const colors: Record<string, string> = { info: '#1e40af', warning: '#854d0e', error: '#991b1b', success: '#166534' }
       const bgs: Record<string, string> = { info: '#eff6ff', warning: '#fefce8', error: '#fef2f2', success: '#f0fdf4' }
       return (
-        <div className="bp-alert bp-editable" style={{ background: bgs[block.variant], color: colors[block.variant], borderColor: colors[block.variant] + '40' }}>
+        <div className="ep-alert" style={{ background: bgs[block.variant], color: colors[block.variant], borderColor: colors[block.variant] + '40' }}>
           <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-            <i className={`ti ${icons[block.variant]}`} style={{ fontSize: 15, marginTop: 2 }} />
+            <i className={`ti ${icons[block.variant]}`} style={{ fontSize: 16, marginTop: 3 }} />
             <div style={{ flex: 1 }}>
-              <input className="bp-edit-alert-title" value={block.title} onChange={e => update({ title: e.target.value })} placeholder="Title" style={{ color: colors[block.variant] }} />
-              <RichTextarea className="bp-edit-alert-body" value={block.content} onChange={v => update({ content: v })} placeholder="Message..." />
+              <input className="ep-alert-title" value={block.title} onChange={e => update({ title: e.target.value })} placeholder="Title" style={{ color: colors[block.variant] }} />
+              <AutoTextarea ref={bindRef} className="ep-alert-body" value={block.content} onChange={v => update({ content: v })} placeholder="Message..." />
             </div>
           </div>
         </div>
       )
     }
-    case 'quote': return (
-      <div className="bp-quote bp-editable">
-        <RichTextarea className="bp-edit-quote" value={block.content} onChange={v => update({ content: v })} placeholder="Quote..." />
-      </div>
-    )
     default: return <PreviewBlock block={block} />
   }
 }
@@ -997,13 +1004,97 @@ export default function BlockEditor({ content, onContentChange, previewOnly }: P
   const categories = [...new Set(CATALOG.map(c => c.cat))]
   const filtered = menuSearch ? CATALOG.filter(c => c.label.toLowerCase().includes(menuSearch.toLowerCase())) : CATALOG
 
+  const activeTextarea = useRef<HTMLTextAreaElement | null>(null)
+  const [editFontSize, setEditFontSize] = useState('16')
+
+  function editWrap(prefix: string, suffix: string) {
+    const el = activeTextarea.current
+    if (!el) return
+    const start = el.selectionStart
+    const end = el.selectionEnd
+    const val = el.value
+    const selected = val.slice(start, end)
+    const blockEl = el.closest('[data-block-id]')
+    const blockId = blockEl?.getAttribute('data-block-id')
+    if (!blockId) return
+    const blk = blocks.find(b => b.id === blockId)
+    if (!blk) return
+    const field = getTextFieldKey(blk)
+    if (!field) return
+    const fullVal = (blk as any)[field] as string
+    const next = fullVal.slice(0, start) + prefix + (selected || 'text') + suffix + fullVal.slice(end)
+    updateBlock(blockId, { [field]: next })
+    setTimeout(() => {
+      el.focus()
+      const inner = selected || 'text'
+      el.setSelectionRange(start + prefix.length, start + prefix.length + inner.length)
+    }, 0)
+  }
+
+  function editInsertLine(prefix: string) {
+    const el = activeTextarea.current
+    if (!el) return
+    const pos = el.selectionEnd
+    const blockEl = el.closest('[data-block-id]')
+    const blockId = blockEl?.getAttribute('data-block-id')
+    if (!blockId) return
+    const blk = blocks.find(b => b.id === blockId)
+    if (!blk) return
+    const field = getTextFieldKey(blk)
+    if (!field) return
+    const val = (blk as any)[field] as string
+    const before = val.slice(0, pos)
+    const after = val.slice(pos)
+    const nl = before.length > 0 && !before.endsWith('\n') ? '\n' : ''
+    updateBlock(blockId, { [field]: before + nl + prefix + after })
+  }
+
   if (previewOnly) {
     return (
-      <div className="be-preview-only" ref={containerRef}>
-        <div className="be-preview-body">
+      <div className="ep-container" ref={containerRef}>
+        <div className="ep-toolbar">
+          <div className="be-fmt-group">
+            <i className="ti ti-typography be-fmt-icon" />
+            <select className="be-fmt-select" value="Inter" onChange={() => {}}><option>Inter</option></select>
+          </div>
+          <div className="be-fmt-sep" />
+          <div className="be-fmt-group">
+            <select className="be-fmt-select be-fmt-size" value={editFontSize} onChange={e => setEditFontSize(e.target.value)}>
+              <option value="14">14px</option><option value="16">16px</option><option value="18">18px</option><option value="20">20px</option>
+            </select>
+          </div>
+          <div className="be-fmt-sep" />
+          <div className="be-fmt-group">
+            <button className="be-fmt-btn" onClick={() => editWrap('**', '**')} title="Bold" type="button"><i className="ti ti-bold" /></button>
+            <button className="be-fmt-btn" onClick={() => editWrap('*', '*')} title="Italic" type="button"><i className="ti ti-italic" /></button>
+            <button className="be-fmt-btn" onClick={() => editWrap('<u>', '</u>')} title="Underline" type="button"><i className="ti ti-underline" /></button>
+          </div>
+          <div className="be-fmt-sep" />
+          <div className="be-fmt-group">
+            <button className="be-fmt-btn" title="Text color" type="button"><span className="be-fmt-color" /></button>
+          </div>
+          <div className="be-fmt-sep" />
+          <div className="be-fmt-group">
+            <button className="be-fmt-btn" title="Align left" type="button"><i className="ti ti-align-left" /></button>
+            <button className="be-fmt-btn" title="Align center" type="button"><i className="ti ti-align-center" /></button>
+            <button className="be-fmt-btn" title="Align right" type="button"><i className="ti ti-align-right" /></button>
+          </div>
+          <div className="be-fmt-sep" />
+          <div className="be-fmt-group">
+            <button className="be-fmt-btn" onClick={() => editInsertLine('- ')} title="Bullet list" type="button"><i className="ti ti-list" /></button>
+            <button className="be-fmt-btn" onClick={() => editInsertLine('1. ')} title="Numbered list" type="button"><i className="ti ti-list-numbers" /></button>
+          </div>
+          <div className="be-fmt-sep" />
+          <div className="be-fmt-group">
+            <button className="be-fmt-btn" onClick={() => editWrap('[', '](url)')} title="Link" type="button"><i className="ti ti-link" /></button>
+            <button className="be-fmt-btn" onClick={() => editInsertLine('![image](url)')} title="Image" type="button"><i className="ti ti-photo" /></button>
+            <button className="be-fmt-btn" onClick={() => editWrap('`', '`')} title="Code" type="button"><i className="ti ti-code" /></button>
+          </div>
+        </div>
+        <div className="ep-body" style={{ fontSize: `${editFontSize}px` }}>
           {blocks.map(block => (
-            <div key={block.id} className="be-preview-block" data-block-id={block.id}>
-              <EditablePreviewBlock block={block} update={(data: any) => updateBlock(block.id, data)} />
+            <div key={block.id} className="ep-block" data-block-id={block.id}>
+              <InlineEditBlock block={block} update={(data: any) => updateBlock(block.id, data)} activeRef={activeTextarea} />
             </div>
           ))}
         </div>
