@@ -836,12 +836,72 @@ function PreviewBlock({ block }: { block: Block }) {
 
 /* ---- main component ---- */
 
+/* ---- editable preview block ---- */
+
+function EditablePreviewBlock({ block, update }: { block: Block; update: (d: any) => void }) {
+  switch (block.type) {
+    case 'text': return (
+      <div className="bp-editable">
+        <RichTextarea className="bp-edit-text" value={block.content} onChange={v => update({ content: v })} placeholder="Type something..." />
+      </div>
+    )
+    case 'heading': return (
+      <div className="bp-editable">
+        <RichTextarea className={`bp-edit-heading bp-edit-h${block.level}`} value={block.content} onChange={v => update({ content: v })} placeholder={`Heading ${block.level}`} />
+      </div>
+    )
+    case 'callout': {
+      const colors: Record<string, string> = { tip: 'var(--green)', note: '#2563eb', warning: 'var(--yellow)', important: 'var(--red)', info: '#2563eb', example: '#7c3aed', question: '#d97706' }
+      const bgs: Record<string, string> = { tip: 'var(--green-bg)', note: '#eff6ff', warning: 'var(--yellow-bg)', important: 'var(--red-bg)', info: '#eff6ff', example: '#f5f3ff', question: '#fffbeb' }
+      return (
+        <div className="bp-callout bp-editable" style={{ borderLeftColor: colors[block.variant] || '#2563eb', background: bgs[block.variant] || '#eff6ff' }}>
+          <input className="bp-edit-callout-title" value={block.title} onChange={e => update({ title: e.target.value })} placeholder="Title" style={{ color: colors[block.variant] }} />
+          <RichTextarea className="bp-edit-callout-body" value={block.content} onChange={v => update({ content: v })} placeholder="Content..." />
+        </div>
+      )
+    }
+    case 'card': return (
+      <div className={`bp-card bp-card-${block.variant || 'default'} bp-editable`}>
+        <div className="bp-card-header">
+          <input className="bp-edit-card-title" value={block.title} onChange={e => update({ title: e.target.value })} placeholder="Card title" />
+          <input className="bp-edit-card-desc" value={block.description} onChange={e => update({ description: e.target.value })} placeholder="Description" />
+        </div>
+        <RichTextarea className="bp-edit-card-body" value={block.content} onChange={v => update({ content: v })} placeholder="Content..." />
+        {(block.footer || true) && <input className="bp-edit-card-footer" value={block.footer || ''} onChange={e => update({ footer: e.target.value })} placeholder="Footer" />}
+      </div>
+    )
+    case 'alert': {
+      const icons: Record<string, string> = { info: 'ti-info-circle', warning: 'ti-alert-triangle', error: 'ti-alert-octagon', success: 'ti-circle-check' }
+      const colors: Record<string, string> = { info: '#1e40af', warning: '#854d0e', error: '#991b1b', success: '#166534' }
+      const bgs: Record<string, string> = { info: '#eff6ff', warning: '#fefce8', error: '#fef2f2', success: '#f0fdf4' }
+      return (
+        <div className="bp-alert bp-editable" style={{ background: bgs[block.variant], color: colors[block.variant], borderColor: colors[block.variant] + '40' }}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+            <i className={`ti ${icons[block.variant]}`} style={{ fontSize: 15, marginTop: 2 }} />
+            <div style={{ flex: 1 }}>
+              <input className="bp-edit-alert-title" value={block.title} onChange={e => update({ title: e.target.value })} placeholder="Title" style={{ color: colors[block.variant] }} />
+              <RichTextarea className="bp-edit-alert-body" value={block.content} onChange={v => update({ content: v })} placeholder="Message..." />
+            </div>
+          </div>
+        </div>
+      )
+    }
+    case 'quote': return (
+      <div className="bp-quote bp-editable">
+        <RichTextarea className="bp-edit-quote" value={block.content} onChange={v => update({ content: v })} placeholder="Quote..." />
+      </div>
+    )
+    default: return <PreviewBlock block={block} />
+  }
+}
+
 interface Props {
   content: string
   onContentChange: (content: string) => void
+  previewOnly?: boolean
 }
 
-export default function BlockEditor({ content, onContentChange }: Props) {
+export default function BlockEditor({ content, onContentChange, previewOnly }: Props) {
   const [blocks, setBlocks] = useState<Block[]>(() => parseBlocks(content))
   const [menuIndex, setMenuIndex] = useState<number | null>(null)
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 })
@@ -936,6 +996,20 @@ export default function BlockEditor({ content, onContentChange }: Props) {
 
   const categories = [...new Set(CATALOG.map(c => c.cat))]
   const filtered = menuSearch ? CATALOG.filter(c => c.label.toLowerCase().includes(menuSearch.toLowerCase())) : CATALOG
+
+  if (previewOnly) {
+    return (
+      <div className="be-preview-only" ref={containerRef}>
+        <div className="be-preview-body">
+          {blocks.map(block => (
+            <div key={block.id} className="be-preview-block" data-block-id={block.id}>
+              <EditablePreviewBlock block={block} update={(data: any) => updateBlock(block.id, data)} />
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="block-editor" ref={containerRef}>

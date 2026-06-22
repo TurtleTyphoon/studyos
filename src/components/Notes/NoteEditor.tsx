@@ -8,11 +8,8 @@ import 'katex/dist/katex.min.css'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
 import type { Note, Course } from '../../types/database'
-import SlashMenu from './SlashMenu'
-import FloatingToolbar from './FloatingToolbar'
 import CommandPalette from './CommandPalette'
 import BacklinksPanel from './BacklinksPanel'
-import TypographyToolbar from './TypographyToolbar'
 import BlockEditor, { blocksToMarkdown } from './BlockEditor'
 
 function getMarkdownContent(content: string): string {
@@ -232,21 +229,13 @@ export default function NoteEditor({ note, courses, allNotes, onSave, onClose, o
   const [courseId, setCourseId] = useState(note?.course_id ?? '')
   const [week, setWeek] = useState(note?.week?.toString() ?? '')
   const [concepts, setConcepts] = useState(note?.concepts?.join(', ') ?? '')
-  const [mode, setMode] = useState<'blocks' | 'edit' | 'preview' | 'study'>('blocks')
+  const [mode, setMode] = useState<'blocks' | 'preview' | 'study'>('blocks')
   const [saving, setSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState<string | null>(null)
   const [splitFile, setSplitFile] = useState<string | null>(null)
-  const [showLinkSuggest, setShowLinkSuggest] = useState(false)
-  const [linkQuery, setLinkQuery] = useState('')
-  const [linkPos, setLinkPos] = useState({ top: 0, left: 0 })
-  const [showSlash, setShowSlash] = useState(false)
-  const [slashQuery, setSlashQuery] = useState('')
-  const [slashPos, setSlashPos] = useState({ top: 0, left: 0 })
-  const [uploadingImage, setUploadingImage] = useState(false)
   const [focusMode, setFocusMode] = useState(false)
   const [showCommandPalette, setShowCommandPalette] = useState(false)
   const [showBacklinks, setShowBacklinks] = useState(true)
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const isNew = !note
 
@@ -291,110 +280,6 @@ export default function NoteEditor({ note, courses, allNotes, onSave, onClose, o
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [save])
 
-  function handleTextareaChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
-    const val = e.target.value
-    setContent(val)
-    const pos = e.target.selectionStart
-    const textBefore = val.slice(0, pos)
-
-    const linkMatch = textBefore.match(/\[\[([^\]]*)$/)
-    if (linkMatch) {
-      setLinkQuery(linkMatch[1].toLowerCase())
-      setShowLinkSuggest(true)
-      const textarea = textareaRef.current
-      if (textarea) setLinkPos({ top: textarea.offsetTop + 30, left: textarea.offsetLeft + 20 })
-    } else {
-      setShowLinkSuggest(false)
-    }
-
-    const lineStart = textBefore.lastIndexOf('\n') + 1
-    const currentLine = textBefore.slice(lineStart)
-    const slashMatch = currentLine.match(/^\/(\w*)$/)
-    if (slashMatch) {
-      setSlashQuery(slashMatch[1])
-      setShowSlash(true)
-      const textarea = textareaRef.current
-      if (textarea) setSlashPos({ top: textarea.offsetTop + 30, left: textarea.offsetLeft + 20 })
-    } else {
-      setShowSlash(false)
-    }
-  }
-
-  function handleSlashSelect(template: string) {
-    const textarea = textareaRef.current
-    if (!textarea) return
-    const pos = textarea.selectionStart
-    const textBefore = content.slice(0, pos)
-    const lineStart = textBefore.lastIndexOf('\n') + 1
-    const before = content.slice(0, lineStart)
-    const after = content.slice(pos)
-    setContent(before + template + after)
-    setShowSlash(false)
-    setTimeout(() => { textarea.focus(); textarea.setSelectionRange(lineStart + template.length, lineStart + template.length) }, 0)
-  }
-
-  async function handlePaste(e: React.ClipboardEvent) {
-    const items = e.clipboardData.items
-    for (const item of Array.from(items)) {
-      if (item.type.startsWith('image/')) {
-        e.preventDefault()
-        const file = item.getAsFile()
-        if (!file || !user) return
-        setUploadingImage(true)
-        const ext = file.type.split('/')[1] || 'png'
-        const path = `${user.id}/${Date.now()}.${ext}`
-        const { error } = await supabase.storage.from('note-attachments').upload(path, file)
-        if (error) { setUploadingImage(false); return }
-        const { data: urlData } = supabase.storage.from('note-attachments').getPublicUrl(path)
-        const textarea = textareaRef.current
-        if (textarea) {
-          const pos = textarea.selectionStart
-          const markdown = `![image](${urlData.publicUrl})\n`
-          setContent(content.slice(0, pos) + markdown + content.slice(pos))
-          setTimeout(() => { textarea.focus(); textarea.setSelectionRange(pos + markdown.length, pos + markdown.length) }, 0)
-        }
-        setUploadingImage(false)
-        return
-      }
-    }
-  }
-
-  function insertLink(noteTitle: string) {
-    const textarea = textareaRef.current
-    if (!textarea) return
-    const pos = textarea.selectionStart
-    const textBefore = content.slice(0, pos)
-    const bracketStart = textBefore.lastIndexOf('[[')
-    if (bracketStart === -1) return
-    const newContent = `${content.slice(0, bracketStart)}[[${noteTitle}]]${content.slice(pos)}`
-    setContent(newContent)
-    setShowLinkSuggest(false)
-    setTimeout(() => { const np = bracketStart + noteTitle.length + 4; textarea.focus(); textarea.setSelectionRange(np, np) }, 0)
-  }
-
-  function insertRecallBlock() {
-    const textarea = textareaRef.current
-    if (!textarea) return
-    const pos = textarea.selectionStart
-    const end = textarea.selectionEnd
-    const selected = content.slice(pos, end)
-    const block = selected ? `??${selected}??` : '??Your answer here??'
-    setContent(content.slice(0, pos) + block + content.slice(end))
-    setTimeout(() => { textarea.focus(); if (!selected) textarea.setSelectionRange(pos + 2, pos + 2 + 'Your answer here'.length) }, 0)
-  }
-
-  function insertTemplate(templateContent: string) {
-    const textarea = textareaRef.current
-    if (textarea) {
-      const pos = textarea.selectionStart
-      setContent(content.slice(0, pos) + templateContent + content.slice(pos))
-      setTimeout(() => { textarea.focus() }, 0)
-    } else {
-      setContent(content + '\n' + templateContent)
-    }
-  }
-
-  const linkSuggestions = allNotes.filter(n => n.id !== note?.id && n.title.toLowerCase().includes(linkQuery)).slice(0, 5)
   const pdfNotes = allNotes.filter(n => n.file_type === 'pdf' && n.file_url)
 
   return (
@@ -416,34 +301,32 @@ export default function NoteEditor({ note, courses, allNotes, onSave, onClose, o
           </div>
           <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
             {lastSaved && <span style={{ fontSize: 10, color: 'var(--subtle)' }}>Saved {lastSaved}</span>}
-            {(mode === 'edit' || mode === 'blocks') && (
+            {(mode === 'blocks' || mode === 'preview') && (
               <>
-                <button className="btn" onClick={insertRecallBlock} title="Insert recall block">
-                  <i className="ti ti-brain" style={{ fontSize: 12 }} />??
-                </button>
                 <button className="btn" onClick={() => setShowCommandPalette(true)} title="Command palette (Cmd+K)">
                   <i className="ti ti-command" style={{ fontSize: 12 }} />
                 </button>
                 <button className="btn" onClick={() => setFocusMode(true)} title="Focus mode">
                   <i className="ti ti-focus-2" style={{ fontSize: 12 }} />
                 </button>
-                <button className="btn" onClick={() => setShowBacklinks(v => !v)} title="Toggle backlinks">
-                  <i className="ti ti-link" style={{ fontSize: 12 }} />
-                </button>
-                {pdfNotes.length > 0 && (
-                  <select className="note-editor-select" value={splitFile ?? ''} onChange={e => setSplitFile(e.target.value || null)} title="Split PDF">
-                    <option value="">Split view</option>
-                    {pdfNotes.map(n => <option key={n.id} value={n.file_url!}>{n.title}</option>)}
-                  </select>
+                {mode === 'blocks' && (
+                  <>
+                    <button className="btn" onClick={() => setShowBacklinks(v => !v)} title="Toggle backlinks">
+                      <i className="ti ti-link" style={{ fontSize: 12 }} />
+                    </button>
+                    {pdfNotes.length > 0 && (
+                      <select className="note-editor-select" value={splitFile ?? ''} onChange={e => setSplitFile(e.target.value || null)} title="Split PDF">
+                        <option value="">Split view</option>
+                        {pdfNotes.map(n => <option key={n.id} value={n.file_url!}>{n.title}</option>)}
+                      </select>
+                    )}
+                  </>
                 )}
               </>
             )}
             <div className="note-editor-mode-toggle">
               <button className={`mode-btn ${mode === 'blocks' ? 'active' : ''}`} onClick={() => setMode('blocks')} title="Block editor">
                 <i className="ti ti-layout-list" style={{ fontSize: 12 }} />Build
-              </button>
-              <button className={`mode-btn ${mode === 'edit' ? 'active' : ''}`} onClick={() => setMode('edit')} title="Markdown editor">
-                <i className="ti ti-code" style={{ fontSize: 12 }} />Markdown
               </button>
               <button className={`mode-btn ${mode === 'preview' ? 'active' : ''}`} onClick={() => setMode('preview')}>
                 <i className="ti ti-eye" style={{ fontSize: 12 }} />Preview
@@ -494,39 +377,12 @@ export default function NoteEditor({ note, courses, allNotes, onSave, onClose, o
         <div className="note-editor-main-pane" style={{ position: 'relative' }}>
           {mode === 'blocks' ? (
             <BlockEditor content={content} onContentChange={setContent} />
-          ) : mode === 'edit' ? (
-            <div className="editor-write-pane" style={{ position: 'relative' }}>
-              <TypographyToolbar textareaRef={textareaRef} content={content} onContentChange={setContent} />
-              <textarea
-                ref={textareaRef}
-                className="note-editor-textarea"
-                placeholder={'Start writing... (Markdown supported)\n\nShortcuts:\n  /             Slash commands\n  Cmd+K         Command palette\n  ?? answer ??  Active recall\n  [[Note]]      Link notes\n  #tag          Inline tag\n  $math$        LaTeX math\n  ==text==      Highlight\n  > [!tip]      Callout block\n  > [!toggle]   Collapsible section\n  ```mermaid    Diagrams'}
-                value={content}
-                onChange={handleTextareaChange}
-                onPaste={handlePaste}
-                spellCheck
-              />
-              {uploadingImage && (
-                <div style={{ position: 'absolute', bottom: 8, right: 8, fontSize: 10, color: 'var(--subtle)', display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <i className="ti ti-loader-2" style={{ fontSize: 11, animation: 'spin 1s linear infinite' }} />Uploading...
-                </div>
-              )}
-              <FloatingToolbar textareaRef={textareaRef} content={content} onContentChange={setContent} />
-              <SlashMenu visible={showSlash} query={slashQuery} position={slashPos} onSelect={handleSlashSelect} onClose={() => setShowSlash(false)} />
-              {showLinkSuggest && linkSuggestions.length > 0 && (
-                <div className="link-suggest" style={{ top: linkPos.top, left: linkPos.left }}>
-                  {linkSuggestions.map(n => (
-                    <div key={n.id} className="link-suggest-item" onClick={() => insertLink(n.title)}>
-                      <i className="ti ti-file-text" style={{ fontSize: 11, color: 'var(--subtle)' }} />{n.title}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+          ) : mode === 'preview' ? (
+            <BlockEditor content={content} onContentChange={setContent} previewOnly />
           ) : (
             <div className="note-editor-preview markdown-body">
               {content ? (
-                renderMarkdownWithFeatures(getMarkdownContent(content), allNotes, onOpenNote, mode === 'study')
+                renderMarkdownWithFeatures(getMarkdownContent(content), allNotes, onOpenNote, true)
               ) : (
                 <p style={{ color: 'var(--subtle)' }}>Nothing to preview yet.</p>
               )}
@@ -534,7 +390,7 @@ export default function NoteEditor({ note, courses, allNotes, onSave, onClose, o
           )}
         </div>
 
-        {!focusMode && showBacklinks && (mode === 'edit' || mode === 'blocks') && !splitFile && (
+        {!focusMode && showBacklinks && mode === 'blocks' && !splitFile && (
           <BacklinksPanel currentNote={note} allNotes={allNotes} onOpenNote={onOpenNote} />
         )}
       </div>
@@ -545,9 +401,9 @@ export default function NoteEditor({ note, courses, allNotes, onSave, onClose, o
         allNotes={allNotes}
         onOpenNote={onOpenNote}
         onNewNote={onClose}
-        onToggleMode={setMode}
+        onToggleMode={setMode as (mode: string) => void}
         onToggleFocus={() => setFocusMode(v => !v)}
-        onInsertTemplate={insertTemplate}
+        onInsertTemplate={() => {}}
       />
     </div>
   )

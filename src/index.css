@@ -725,3 +725,30 @@ h4.bp-heading{font-size:13px}
 .bp-badge-secondary{background:var(--surface);color:var(--text);border-color:var(--border)}
 .bp-badge-outline{background:transparent;color:var(--text);border-color:var(--border-strong)}
 .bp-badge-destructive{background:#ef4444;color:#fff}
+
+/* ---- Preview-only mode (editable preview) ---- */
+.be-preview-only{max-width:720px;margin:0 auto;padding:20px 24px}
+.be-preview-only .be-preview-body{display:flex;flex-direction:column;gap:4px}
+.be-preview-only .be-preview-block{border-radius:6px;transition:background .15s}
+.be-preview-only .be-preview-block:hover{background:rgba(0,0,0,.015)}
+
+/* Editable preview inputs */
+.bp-editable{position:relative}
+.bp-editable .be-rich-wrap{border-color:transparent;background:transparent}
+.bp-editable .be-rich-wrap:focus-within{border-color:var(--border);background:var(--bg)}
+.bp-editable .be-fmt-bar{opacity:0;height:0;overflow:hidden;padding:0;border:none;transition:.15s}
+.bp-editable .be-rich-wrap:focus-within .be-fmt-bar{opacity:1;height:auto;padding:6px 10px;border-bottom:1px solid var(--border)}
+.bp-editable .be-rich-textarea{padding:4px 0!important;min-height:auto}
+.bp-edit-text .be-rich-textarea{font-size:14px;line-height:1.8}
+.bp-edit-heading .be-rich-textarea{font-weight:600;letter-spacing:-.3px}
+.bp-edit-h1 .be-rich-textarea{font-size:22px}
+.bp-edit-h2 .be-rich-textarea{font-size:18px}
+.bp-edit-h3 .be-rich-textarea{font-size:15px}
+.bp-edit-h4 .be-rich-textarea{font-size:13px}
+.bp-edit-quote .be-rich-textarea{font-style:italic;color:var(--muted)}
+.bp-edit-callout-title,.bp-edit-card-title,.bp-edit-alert-title{border:none;background:transparent;outline:none;font-family:var(--font);font-weight:600;font-size:12px;width:100%;padding:0;margin:0}
+.bp-edit-callout-title::placeholder,.bp-edit-card-title::placeholder,.bp-edit-alert-title::placeholder{color:inherit;opacity:.4}
+.bp-edit-callout-body .be-rich-textarea,.bp-edit-alert-body .be-rich-textarea,.bp-edit-card-body .be-rich-textarea{font-size:12px;min-height:auto;padding:2px 0!important}
+.bp-edit-card-desc,.bp-edit-card-footer{border:none;background:transparent;outline:none;font-family:var(--font);font-size:11px;color:var(--muted);width:100%;padding:0;margin:0}
+.bp-edit-card-desc::placeholder,.bp-edit-card-footer::placeholder{color:var(--border-strong)}
+.bp-edit-card-footer{border-top:1px solid var(--border);padding-top:8px;margin-top:4px}
