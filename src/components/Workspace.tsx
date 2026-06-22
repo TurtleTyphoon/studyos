@@ -18,6 +18,7 @@ export default function Workspace() {
   const [notes, setNotes] = useState<Note[]>([])
   const [activeId, setActiveId] = useState<string | null>(null)
   const [blocks, setBlocks] = useState<Block[]>([])
+  const [editingBlock, setEditingBlock] = useState<Block | null>(null)
 
   const activeNote = notes.find(n => n.id === activeId) ?? null
 
@@ -42,6 +43,7 @@ export default function Workspace() {
     } catch {
       setBlocks([])
     }
+    setEditingBlock(null)
   }, [activeNote])
 
   const saveBlocks = useCallback(async (newBlocks: Block[]) => {
@@ -74,18 +76,21 @@ export default function Workspace() {
   }
 
   function addBlocks(newBlocks: Block[]) {
-    const updated = [...blocks, ...newBlocks]
-    saveBlocks(updated)
+    saveBlocks([...blocks, ...newBlocks])
   }
 
   function updateBlock(id: string, data: Partial<Block>) {
-    const updated = blocks.map(b => b.id === id ? { ...b, ...data } as Block : b)
-    saveBlocks(updated)
+    saveBlocks(blocks.map(b => b.id === id ? { ...b, ...data } as Block : b))
+    setEditingBlock(null)
   }
 
   function deleteBlock(id: string) {
-    const updated = blocks.filter(b => b.id !== id)
-    saveBlocks(updated)
+    saveBlocks(blocks.filter(b => b.id !== id))
+    setEditingBlock(null)
+  }
+
+  function selectBlock(block: Block) {
+    setEditingBlock(block)
   }
 
   return (
@@ -100,8 +105,19 @@ export default function Workspace() {
       <div className="main">
         {activeNote ? (
           <>
-            <NoteView blocks={blocks} onUpdate={updateBlock} onDelete={deleteBlock} />
-            <ChatBar onSubmit={addBlocks} />
+            <NoteView
+              blocks={blocks}
+              editingId={editingBlock?.id ?? null}
+              onSelect={selectBlock}
+              onUpdate={updateBlock}
+            />
+            <ChatBar
+              onSubmit={addBlocks}
+              editingBlock={editingBlock}
+              onEditSave={updateBlock}
+              onEditCancel={() => setEditingBlock(null)}
+              onEditDelete={deleteBlock}
+            />
           </>
         ) : (
           <div className="note-empty">
@@ -109,7 +125,6 @@ export default function Workspace() {
             <div className="note-empty-title">StudyOS</div>
             <div className="note-empty-hint">
               Select a note from the sidebar or create a new one to get started.
-              Use the chat bar to add content with natural commands.
             </div>
           </div>
         )}

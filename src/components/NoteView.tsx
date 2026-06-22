@@ -3,11 +3,12 @@ import type { Block } from './blocks'
 
 interface Props {
   blocks: Block[]
+  editingId: string | null
+  onSelect: (block: Block) => void
   onUpdate: (id: string, data: Partial<Block>) => void
-  onDelete: (id: string) => void
 }
 
-export default function NoteView({ blocks, onUpdate, onDelete }: Props) {
+export default function NoteView({ blocks, editingId, onSelect, onUpdate }: Props) {
   const endRef = useRef<HTMLDivElement>(null)
   const prevLen = useRef(blocks.length)
 
@@ -25,7 +26,7 @@ export default function NoteView({ blocks, onUpdate, onDelete }: Props) {
           <i className="ti ti-message-circle note-empty-icon" />
           <div className="note-empty-title">Start writing</div>
           <div className="note-empty-hint">
-            Type in the chat bar below to add content. Use markdown shortcuts like # for headings, - for lists, or {'>'} for quotes. You can also type natural commands like "callout: Remember this for the exam".
+            Pick a block template below, or type in the chat bar. Use # for headings, - for lists, {'>'} for quotes.
           </div>
         </div>
       </div>
@@ -36,7 +37,13 @@ export default function NoteView({ blocks, onUpdate, onDelete }: Props) {
     <div className="note-stream">
       <div className="note-stream-inner">
         {blocks.map(block => (
-          <BlockRenderer key={block.id} block={block} onUpdate={onUpdate} onDelete={onDelete} />
+          <div
+            key={block.id}
+            className={`block ${editingId === block.id ? 'block-editing' : ''}`}
+            onClick={() => onSelect(block)}
+          >
+            <BlockContent block={block} onUpdate={onUpdate} />
+          </div>
         ))}
         <div ref={endRef} />
       </div>
@@ -44,63 +51,20 @@ export default function NoteView({ blocks, onUpdate, onDelete }: Props) {
   )
 }
 
-function BlockRenderer({ block, onUpdate, onDelete }: { block: Block; onUpdate: (id: string, d: Partial<Block>) => void; onDelete: (id: string) => void }) {
-  function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === 'Backspace' && (e.target as HTMLElement).textContent === '') {
-      e.preventDefault()
-      onDelete(block.id)
-    }
-  }
-
+function BlockContent({ block, onUpdate }: { block: Block; onUpdate: (id: string, d: Partial<Block>) => void }) {
   switch (block.type) {
     case 'text':
-      return (
-        <div
-          className="block block-text"
-          contentEditable
-          suppressContentEditableWarning
-          onBlur={e => onUpdate(block.id, { content: e.currentTarget.textContent || '' })}
-          onKeyDown={handleKeyDown}
-          dangerouslySetInnerHTML={{ __html: block.content || '<br>' }}
-        />
-      )
+      return <div className="block-text">{block.content || 'Empty text block'}</div>
 
     case 'heading':
-      return (
-        <div
-          className={`block block-heading block-h${block.level}`}
-          contentEditable
-          suppressContentEditableWarning
-          onBlur={e => onUpdate(block.id, { content: e.currentTarget.textContent || '' })}
-          onKeyDown={handleKeyDown}
-          dangerouslySetInnerHTML={{ __html: block.content || '<br>' }}
-        />
-      )
+      return <div className={`block-heading block-h${block.level}`}>{block.content || 'Empty heading'}</div>
 
     case 'quote':
-      return (
-        <div className="block block-quote">
-          <div
-            contentEditable
-            suppressContentEditableWarning
-            onBlur={e => onUpdate(block.id, { content: e.currentTarget.textContent || '' })}
-            dangerouslySetInnerHTML={{ __html: block.content || '<br>' }}
-          />
-        </div>
-      )
+      return <div className="block-quote">{block.content || 'Empty quote'}</div>
 
     case 'code':
       return (
-        <div className="block">
-          <pre className="block-code">
-            <code
-              contentEditable
-              suppressContentEditableWarning
-              onBlur={e => onUpdate(block.id, { content: e.currentTarget.textContent || '' })}
-              dangerouslySetInnerHTML={{ __html: block.content || '<br>' }}
-            />
-          </pre>
-        </div>
+        <pre className="block-code"><code>{block.content || '// empty'}</code></pre>
       )
 
     case 'divider':
@@ -108,55 +72,49 @@ function BlockRenderer({ block, onUpdate, onDelete }: { block: Block; onUpdate: 
 
     case 'bullet-list':
       return (
-        <div className="block">
-          <ul className="block-list">
-            {block.items.map((item, i) => <li key={i}>{item}</li>)}
-          </ul>
-        </div>
+        <ul className="block-list">
+          {block.items.map((item, i) => <li key={i}>{item || 'Empty item'}</li>)}
+        </ul>
       )
 
     case 'number-list':
       return (
-        <div className="block">
-          <ol className="block-list">
-            {block.items.map((item, i) => <li key={i}>{item}</li>)}
-          </ol>
-        </div>
+        <ol className="block-list">
+          {block.items.map((item, i) => <li key={i}>{item || 'Empty item'}</li>)}
+        </ol>
       )
 
     case 'checklist':
       return (
-        <div className="block">
-          <ul className="block-checklist">
-            {block.items.map((item, i) => (
-              <li key={i}>
-                <div
-                  className={`block-check ${item.done ? 'block-check-done' : ''}`}
-                  onClick={() => {
-                    const items = [...block.items]
-                    items[i] = { ...items[i], done: !items[i].done }
-                    onUpdate(block.id, { items })
-                  }}
-                />
-                <span className={item.done ? 'block-check-text-done' : ''}>{item.text}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+        <ul className="block-checklist">
+          {block.items.map((item, i) => (
+            <li key={i}>
+              <div
+                className={`block-check ${item.done ? 'block-check-done' : ''}`}
+                onClick={e => {
+                  e.stopPropagation()
+                  const items = [...block.items]
+                  items[i] = { ...items[i], done: !items[i].done }
+                  onUpdate(block.id, { items })
+                }}
+              />
+              <span className={item.done ? 'block-check-text-done' : ''}>{item.text || 'Empty item'}</span>
+            </li>
+          ))}
+        </ul>
       )
 
     case 'callout': {
       const colors: Record<string, { border: string; bg: string }> = {
-        tip: { border: '#22c55e', bg: 'rgba(34,197,94,.08)' },
-        note: { border: '#3b82f6', bg: 'rgba(59,130,246,.08)' },
-        warning: { border: '#eab308', bg: 'rgba(234,179,8,.08)' },
-        important: { border: '#ef4444', bg: 'rgba(239,68,68,.08)' },
-        callout: { border: '#3b82f6', bg: 'rgba(59,130,246,.08)' },
+        tip: { border: 'var(--green)', bg: 'var(--green-bg)' },
+        note: { border: 'var(--blue)', bg: 'var(--blue-bg)' },
+        warning: { border: 'var(--yellow)', bg: 'var(--yellow-bg)' },
+        important: { border: 'var(--red)', bg: 'var(--red-bg)' },
       }
       const c = colors[block.variant] || colors.note
       return (
-        <div className="block block-callout" style={{ borderColor: c.border, background: c.bg }}>
-          <div className="block-callout-title" style={{ color: c.border }}>{block.title}</div>
+        <div className="block-callout" style={{ borderColor: c.border, background: c.bg }}>
+          <div className="block-callout-title" style={{ color: c.border }}>{block.title || block.variant}</div>
           <div className="block-callout-body">{block.content}</div>
         </div>
       )
@@ -164,15 +122,15 @@ function BlockRenderer({ block, onUpdate, onDelete }: { block: Block; onUpdate: 
 
     case 'card':
       return (
-        <div className="block block-card">
-          <div className="block-card-title">{block.title}</div>
+        <div className="block-card">
+          <div className="block-card-title">{block.title || 'Untitled card'}</div>
           <div className="block-card-body">{block.content}</div>
         </div>
       )
 
     case 'image':
       return (
-        <div className="block block-image">
+        <div className="block-image">
           <img src={block.url} alt={block.caption} />
           {block.caption && <div className="block-image-caption">{block.caption}</div>}
         </div>
