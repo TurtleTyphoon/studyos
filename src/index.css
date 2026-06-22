@@ -741,7 +741,7 @@ h4.bp-heading{font-size:13px}
 .ep-body{padding:40px 48px;max-width:720px;margin:0 auto;width:100%}
 
 /* Edit page header (above toolbar) */
-.ep-header{padding:28px 48px 0;max-width:720px;margin:0 auto;width:100%}
+.ep-header{padding:28px 48px 0}
 .ep-directory{display:flex;align-items:center;gap:8px;font-size:13px;color:#888;margin-bottom:20px}
 .ep-directory i{font-size:9px;color:#bbb}
 .ep-directory span{cursor:default}
