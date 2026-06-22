@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, forwardRef } from 'react'
+import { useState, useRef, useEffect, useCallback, useMemo, forwardRef } from 'react'
 import { createPortal } from 'react-dom'
 
 /* ---- types ---- */
@@ -80,19 +80,33 @@ const CATALOG: CatalogItem[] = [
 let _id = 0
 function uid(): string { return Date.now().toString(36) + (++_id).toString(36) }
 
-function parseBlocks(content: string): Block[] {
-  if (!content?.trim()) return [{ id: uid(), type: 'text', content: '' }]
+interface NoteMeta {
+  subtitle: string
+  excerpt: string
+  description: string
+}
+
+const emptyMeta: NoteMeta = { subtitle: '', excerpt: '', description: '' }
+
+function parseContent(content: string): { blocks: Block[]; meta: NoteMeta } {
+  if (!content?.trim()) return { blocks: [{ id: uid(), type: 'text', content: '' }], meta: { ...emptyMeta } }
   try {
     const parsed = JSON.parse(content)
     if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].type) {
-      return parsed.map((b: Block) => ({ ...b, id: b.id || uid() }))
+      return { blocks: parsed.map((b: Block) => ({ ...b, id: b.id || uid() })), meta: { ...emptyMeta } }
+    }
+    if (parsed.blocks && Array.isArray(parsed.blocks)) {
+      return {
+        blocks: parsed.blocks.map((b: Block) => ({ ...b, id: b.id || uid() })),
+        meta: { ...emptyMeta, ...parsed.meta },
+      }
     }
   } catch { /* not JSON */ }
-  return [{ id: uid(), type: 'text', content }]
+  return { blocks: [{ id: uid(), type: 'text', content }], meta: { ...emptyMeta } }
 }
 
-function serializeBlocks(blocks: Block[]): string {
-  return JSON.stringify(blocks)
+function serializeContent(blocks: Block[], meta: NoteMeta): string {
+  return JSON.stringify({ meta, blocks })
 }
 
 export function blocksToMarkdown(blocks: Block[]): string {
@@ -906,10 +920,14 @@ interface Props {
   content: string
   onContentChange: (content: string) => void
   previewOnly?: boolean
+  noteTitle?: string
+  courseName?: string
 }
 
-export default function BlockEditor({ content, onContentChange, previewOnly }: Props) {
-  const [blocks, setBlocks] = useState<Block[]>(() => parseBlocks(content))
+export default function BlockEditor({ content, onContentChange, previewOnly, noteTitle, courseName }: Props) {
+  const initial = useMemo(() => parseContent(content), [])
+  const [blocks, setBlocks] = useState<Block[]>(initial.blocks)
+  const [meta, setMeta] = useState<NoteMeta>(initial.meta)
   const [menuIndex, setMenuIndex] = useState<number | null>(null)
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 })
   const [menuSearch, setMenuSearch] = useState('')
@@ -923,8 +941,14 @@ export default function BlockEditor({ content, onContentChange, previewOnly }: P
   const syncBlocks = useCallback((newBlocks: Block[]) => {
     setBlocks(newBlocks)
     clearTimeout(syncTimeout.current)
-    syncTimeout.current = setTimeout(() => onContentChange(serializeBlocks(newBlocks)), 100)
-  }, [onContentChange])
+    syncTimeout.current = setTimeout(() => onContentChange(serializeContent(newBlocks, meta)), 100)
+  }, [onContentChange, meta])
+
+  const syncMeta = useCallback((newMeta: NoteMeta) => {
+    setMeta(newMeta)
+    clearTimeout(syncTimeout.current)
+    syncTimeout.current = setTimeout(() => onContentChange(serializeContent(blocks, newMeta)), 100)
+  }, [onContentChange, blocks])
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -1092,6 +1116,28 @@ export default function BlockEditor({ content, onContentChange, previewOnly }: P
           </div>
         </div>
         <div className="ep-body" style={{ fontSize: `${editFontSize}px` }}>
+          <div className="ep-header">
+            {courseName && (
+              <div className="ep-directory">
+                <span>Notes</span>
+                <i className="ti ti-chevron-right" />
+                <span>{courseName}</span>
+                {noteTitle && (<><i className="ti ti-chevron-right" /><span className="ep-dir-current">{noteTitle}</span></>)}
+              </div>
+            )}
+            <h1 className="ep-title">{noteTitle || 'Untitled'}</h1>
+            <input className="ep-subtitle" value={meta.subtitle} onChange={e => syncMeta({ ...meta, subtitle: e.target.value })} placeholder="Add a subtitle..." />
+            <div className="ep-meta-section">
+              <label className="ep-meta-label">Featured excerpt</label>
+              <p className="ep-meta-hint">This will be displayed on the note card and search results.</p>
+              <textarea className="ep-excerpt" value={meta.excerpt} onChange={e => syncMeta({ ...meta, excerpt: e.target.value })} placeholder="Write a short excerpt..." rows={3} />
+            </div>
+            <div className="ep-meta-section">
+              <label className="ep-meta-label">Description</label>
+              <input className="ep-description" value={meta.description} onChange={e => syncMeta({ ...meta, description: e.target.value })} placeholder="Brief description of this note..." />
+            </div>
+            <div className="ep-header-divider" />
+          </div>
           {blocks.map(block => (
             <div key={block.id} className="ep-block" data-block-id={block.id}>
               <InlineEditBlock block={block} update={(data: any) => updateBlock(block.id, data)} activeRef={activeTextarea} />

@@ -19,6 +19,9 @@ function getMarkdownContent(content: string): string {
     if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].type) {
       return blocksToMarkdown(parsed)
     }
+    if (parsed.blocks && Array.isArray(parsed.blocks)) {
+      return blocksToMarkdown(parsed.blocks)
+    }
   } catch { /* not JSON, treat as markdown */ }
   return content
 }
@@ -516,7 +519,7 @@ export default function NoteEditor({ note, courses, allNotes, onSave, onClose, o
           {mode === 'blocks' ? (
             <BlockEditor content={content} onContentChange={setContent} />
           ) : mode === 'preview' ? (
-            <BlockEditor content={content} onContentChange={setContent} previewOnly />
+            <BlockEditor content={content} onContentChange={setContent} previewOnly noteTitle={title} courseName={courses.find(c => c.id === courseId)?.code} />
           ) : mode === 'view' ? (
             <AnnotatedView content={content} annotations={annotations} onAnnotationsChange={setAnnotations} allNotes={allNotes} onOpenNote={onOpenNote} />
           ) : (
