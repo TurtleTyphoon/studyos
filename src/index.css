@@ -690,12 +690,21 @@ h4.bp-heading{font-size:13px}
 .bp-figure img{max-width:100%;border-radius:var(--radius);border:1px solid var(--border)}
 .bp-figure figcaption{font-size:11px;color:var(--muted);margin-top:4px;font-style:italic}
 
-/* ---- Format toolbar ---- */
-.be-rich-wrap{position:relative}
-.be-fmt-toolbar{display:flex;gap:1px;padding:3px;background:var(--card);border:1px solid var(--border);border-bottom:none;border-radius:6px 6px 0 0;flex-wrap:wrap}
-.be-fmt-toolbar+.be-field-textarea{border-radius:0 0 6px 6px}
-.be-fmt-btn{width:28px;height:26px;display:flex;align-items:center;justify-content:center;border:none;background:transparent;color:var(--muted);cursor:pointer;border-radius:4px;font-size:13px;transition:.1s}
+/* ---- Rich text toolbar ---- */
+.be-rich-wrap{display:flex;flex-direction:column;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--bg);transition:border-color .15s}
+.be-rich-wrap:focus-within{border-color:var(--text)}
+.be-fmt-bar{display:flex;align-items:center;gap:2px;padding:6px 10px;background:var(--card);border-bottom:1px solid var(--border);flex-wrap:wrap}
+.be-fmt-group{display:flex;align-items:center;gap:1px}
+.be-fmt-sep{width:1px;height:18px;background:var(--border);margin:0 6px;flex-shrink:0}
+.be-fmt-icon{font-size:14px;color:var(--muted);margin-right:4px}
+.be-fmt-select{border:none;background:transparent;font-family:var(--font);font-size:11px;color:var(--text);cursor:pointer;outline:none;padding:2px 4px;border-radius:4px;font-weight:500}
+.be-fmt-select:hover{background:var(--surface)}
+.be-fmt-size{width:52px}
+.be-fmt-btn{width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:none;background:transparent;color:var(--muted);cursor:pointer;border-radius:5px;font-size:14px;transition:.1s}
 .be-fmt-btn:hover{background:var(--surface);color:var(--text)}
+.be-fmt-color{display:block;width:14px;height:14px;border-radius:50%;background:var(--text);border:2px solid var(--border)}
+.be-rich-textarea{border:none!important;border-radius:0!important;padding:14px 16px!important;min-height:120px;font-size:14px;line-height:1.8;resize:vertical;outline:none;background:transparent;width:100%;font-family:var(--font);color:var(--text)}
+.be-rich-textarea::placeholder{color:var(--border-strong)}
 
 /* ---- Badge block editor ---- */
 .be-badge-list{display:flex;flex-direction:column;gap:8px}

@@ -169,55 +169,81 @@ const AutoTextarea = forwardRef<HTMLTextAreaElement, AutoTextareaProps>(
 
 /* ---- format toolbar ---- */
 
-const FMT_BUTTONS: { icon: string; label: string; prefix: string; suffix: string }[] = [
-  { icon: 'ti-bold', label: 'Bold', prefix: '**', suffix: '**' },
-  { icon: 'ti-italic', label: 'Italic', prefix: '*', suffix: '*' },
-  { icon: 'ti-underline', label: 'Underline', prefix: '<u>', suffix: '</u>' },
-  { icon: 'ti-strikethrough', label: 'Strikethrough', prefix: '~~', suffix: '~~' },
-  { icon: 'ti-code', label: 'Inline code', prefix: '`', suffix: '`' },
-  { icon: 'ti-link', label: 'Link', prefix: '[', suffix: '](url)' },
-]
-
-function FormatToolbar({ textareaRef, value, onChange }: { textareaRef: React.RefObject<HTMLTextAreaElement | null>; value: string; onChange: (v: string) => void }) {
-  function applyFormat(prefix: string, suffix: string) {
-    const el = textareaRef.current
-    if (!el) return
-    const start = el.selectionStart
-    const end = el.selectionEnd
-    const selected = value.slice(start, end)
-    const replacement = prefix + (selected || 'text') + suffix
-    const next = value.slice(0, start) + replacement + value.slice(end)
-    onChange(next)
-    setTimeout(() => {
-      el.focus()
-      if (selected) {
-        el.setSelectionRange(start + prefix.length, start + prefix.length + selected.length)
-      } else {
-        el.setSelectionRange(start + prefix.length, start + prefix.length + 4)
-      }
-    }, 0)
-  }
-
-  return (
-    <div className="be-fmt-toolbar">
-      {FMT_BUTTONS.map(btn => (
-        <button key={btn.icon} className="be-fmt-btn" onClick={() => applyFormat(btn.prefix, btn.suffix)} title={btn.label} type="button">
-          <i className={`ti ${btn.icon}`} />
-        </button>
-      ))}
-    </div>
-  )
-}
-
 function RichTextarea({ value, onChange, className, placeholder, onKeyDown }: {
   value: string; onChange: (v: string) => void; className?: string; placeholder?: string; onKeyDown?: (e: React.KeyboardEvent) => void
 }) {
   const ref = useRef<HTMLTextAreaElement>(null)
-  const [focused, setFocused] = useState(false)
+  const [fontSize, setFontSize] = useState('14')
+
+  function wrap(prefix: string, suffix: string) {
+    const el = ref.current
+    if (!el) return
+    const start = el.selectionStart
+    const end = el.selectionEnd
+    const selected = value.slice(start, end)
+    const next = value.slice(0, start) + prefix + (selected || 'text') + suffix + value.slice(end)
+    onChange(next)
+    setTimeout(() => {
+      el.focus()
+      const inner = selected || 'text'
+      el.setSelectionRange(start + prefix.length, start + prefix.length + inner.length)
+    }, 0)
+  }
+
+  function insertLine(prefix: string) {
+    const el = ref.current
+    if (!el) return
+    const pos = el.selectionEnd
+    const before = value.slice(0, pos)
+    const after = value.slice(pos)
+    const needsNewline = before.length > 0 && !before.endsWith('\n') ? '\n' : ''
+    const next = before + needsNewline + prefix
+    onChange(next + after)
+    setTimeout(() => { el.focus(); el.setSelectionRange(next.length, next.length) }, 0)
+  }
+
   return (
     <div className="be-rich-wrap">
-      {focused && <FormatToolbar textareaRef={ref} value={value} onChange={onChange} />}
-      <AutoTextarea ref={ref} className={className} value={value} onChange={onChange} placeholder={placeholder} onKeyDown={onKeyDown} onFocus={() => setFocused(true)} onBlur={() => setTimeout(() => setFocused(false), 200)} />
+      <div className="be-fmt-bar">
+        <div className="be-fmt-group">
+          <i className="ti ti-typography be-fmt-icon" />
+          <select className="be-fmt-select" value="Inter" onChange={() => {}}><option>Inter</option></select>
+        </div>
+        <div className="be-fmt-sep" />
+        <div className="be-fmt-group">
+          <select className="be-fmt-select be-fmt-size" value={fontSize} onChange={e => setFontSize(e.target.value)}>
+            <option value="12">12px</option><option value="14">14px</option><option value="16">16px</option><option value="18">18px</option><option value="20">20px</option>
+          </select>
+        </div>
+        <div className="be-fmt-sep" />
+        <div className="be-fmt-group">
+          <button className="be-fmt-btn" onClick={() => wrap('**', '**')} title="Bold" type="button"><i className="ti ti-bold" /></button>
+          <button className="be-fmt-btn" onClick={() => wrap('*', '*')} title="Italic" type="button"><i className="ti ti-italic" /></button>
+          <button className="be-fmt-btn" onClick={() => wrap('<u>', '</u>')} title="Underline" type="button"><i className="ti ti-underline" /></button>
+        </div>
+        <div className="be-fmt-sep" />
+        <div className="be-fmt-group">
+          <button className="be-fmt-btn" title="Text color" type="button"><span className="be-fmt-color" /></button>
+        </div>
+        <div className="be-fmt-sep" />
+        <div className="be-fmt-group">
+          <button className="be-fmt-btn" title="Align left" type="button"><i className="ti ti-align-left" /></button>
+          <button className="be-fmt-btn" title="Align center" type="button"><i className="ti ti-align-center" /></button>
+          <button className="be-fmt-btn" title="Align right" type="button"><i className="ti ti-align-right" /></button>
+        </div>
+        <div className="be-fmt-sep" />
+        <div className="be-fmt-group">
+          <button className="be-fmt-btn" onClick={() => insertLine('- ')} title="Bullet list" type="button"><i className="ti ti-list" /></button>
+          <button className="be-fmt-btn" onClick={() => insertLine('1. ')} title="Numbered list" type="button"><i className="ti ti-list-numbers" /></button>
+        </div>
+        <div className="be-fmt-sep" />
+        <div className="be-fmt-group">
+          <button className="be-fmt-btn" onClick={() => wrap('[', '](url)')} title="Link" type="button"><i className="ti ti-link" /></button>
+          <button className="be-fmt-btn" onClick={() => insertLine('![image](url)')} title="Image" type="button"><i className="ti ti-photo" /></button>
+          <button className="be-fmt-btn" onClick={() => wrap('`', '`')} title="Code" type="button"><i className="ti ti-code" /></button>
+        </div>
+      </div>
+      <AutoTextarea ref={ref} className={`be-rich-textarea ${className || ''}`} value={value} onChange={onChange} placeholder={placeholder} onKeyDown={onKeyDown} style={{ fontSize: `${fontSize}px` }} />
     </div>
   )
 }
