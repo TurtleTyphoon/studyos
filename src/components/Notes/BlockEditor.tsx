@@ -13,7 +13,7 @@ interface QuoteBlock extends BlockBase { type: 'quote'; content: string }
 interface DividerBlock extends BlockBase { type: 'divider' }
 interface CodeBlock extends BlockBase { type: 'code'; language: string; content: string }
 interface CalloutBlock extends BlockBase { type: 'callout'; variant: string; title: string; content: string }
-interface CardBlock extends BlockBase { type: 'card'; title: string; description: string; content: string }
+interface CardBlock extends BlockBase { type: 'card'; title: string; description: string; content: string; footer: string; variant: 'default' | 'accent' | 'outlined' }
 interface AlertBlock extends BlockBase { type: 'alert'; variant: 'info' | 'warning' | 'error' | 'success'; title: string; content: string }
 interface AccordionBlock extends BlockBase { type: 'accordion'; items: { title: string; content: string }[] }
 interface StepsBlock extends BlockBase { type: 'steps'; steps: { title: string; description: string }[] }
@@ -51,12 +51,21 @@ const CATALOG: CatalogItem[] = [
   { cat: 'Content', type: 'divider', icon: 'ti-minus', label: 'Divider', create: () => ({ type: 'divider' }) },
   { cat: 'Content', type: 'image', icon: 'ti-photo', label: 'Image', create: () => ({ type: 'image', url: '', caption: '' }) },
 
-  { cat: 'Components', type: 'card', icon: 'ti-layout-cards', label: 'Card', create: () => ({ type: 'card', title: 'Card Title', description: '', content: 'Card content goes here.' }) },
+  { cat: 'Components', type: 'card-blank', icon: 'ti-layout-cards', label: 'Blank Card', create: () => ({ type: 'card', title: '', description: '', content: '', footer: '', variant: 'default' as const }) },
   { cat: 'Components', type: 'alert', icon: 'ti-alert-circle', label: 'Alert', create: () => ({ type: 'alert', variant: 'info' as const, title: 'Note', content: 'Alert content here.' }) },
   { cat: 'Components', type: 'accordion', icon: 'ti-layout-bottombar-collapse', label: 'Accordion', create: () => ({ type: 'accordion', items: [{ title: 'Section 1', content: 'Content' }] }) },
   { cat: 'Components', type: 'steps', icon: 'ti-list-check', label: 'Steps', create: () => ({ type: 'steps', steps: [{ title: 'Step 1', description: 'Description' }] }) },
   { cat: 'Components', type: 'progress', icon: 'ti-chart-bar', label: 'Progress Bar', create: () => ({ type: 'progress', label: 'Progress', value: 50 }) },
   { cat: 'Components', type: 'table', icon: 'ti-table', label: 'Table', create: () => ({ type: 'table', headers: ['Header 1', 'Header 2', 'Header 3'], rows: [['', '', ''], ['', '', '']] }) },
+
+  { cat: 'Card Templates', type: 'tpl-project', icon: 'ti-rocket', label: 'Create Project', create: () => ({ type: 'card', variant: 'default' as const, title: 'Create project', description: 'Deploy your new project in one click.', content: 'Name: My Project\nFramework: React', footer: 'Cancel | Deploy' }) },
+  { cat: 'Card Templates', type: 'tpl-notifications', icon: 'ti-bell', label: 'Notifications', create: () => ({ type: 'card', variant: 'default' as const, title: 'Notifications', description: 'You have 3 unread messages.', content: 'Meeting tomorrow at 9am\nNew comment on your post\nSubscription renewing soon', footer: 'Mark all as read' }) },
+  { cat: 'Card Templates', type: 'tpl-payment', icon: 'ti-credit-card', label: 'Payment Method', create: () => ({ type: 'card', variant: 'default' as const, title: 'Payment Method', description: 'Add a new payment method to your account.', content: 'Card: **** **** **** 4242\nExpiry: 12/28\nCVC: ***', footer: 'Update payment method' }) },
+  { cat: 'Card Templates', type: 'tpl-team', icon: 'ti-users', label: 'Team Members', create: () => ({ type: 'card', variant: 'default' as const, title: 'Team Members', description: 'Invite your team members to collaborate.', content: 'Alice Johnson - Admin\nBob Smith - Editor\nCarol Davis - Viewer', footer: 'Invite member' }) },
+  { cat: 'Card Templates', type: 'tpl-stats', icon: 'ti-chart-bar', label: 'Stats Overview', create: () => ({ type: 'card', variant: 'accent' as const, title: 'Total Revenue', description: '+20.1% from last month', content: '$45,231.89', footer: '' }) },
+  { cat: 'Card Templates', type: 'tpl-report', icon: 'ti-flag', label: 'Report Issue', create: () => ({ type: 'card', variant: 'default' as const, title: 'Report an Issue', description: "What area are you having problems with?", content: 'Area: Billing\nSubject: Payment failed\nDescription: My last payment was declined despite having sufficient funds.', footer: 'Cancel | Submit' }) },
+  { cat: 'Card Templates', type: 'tpl-cookie', icon: 'ti-cookie', label: 'Cookie Settings', create: () => ({ type: 'card', variant: 'default' as const, title: 'Cookie Settings', description: 'Manage your cookie preferences.', content: 'Strictly Necessary: Always active\nFunctional: Enabled\nPerformance: Disabled', footer: 'Save preferences' }) },
+  { cat: 'Card Templates', type: 'tpl-share', icon: 'ti-share', label: 'Share Document', create: () => ({ type: 'card', variant: 'default' as const, title: 'Share this document', description: 'Anyone with the link can view this document.', content: 'Link: https://example.com/doc/abc123', footer: 'Copy link' }) },
 
   { cat: 'Layout', type: 'columns-2', icon: 'ti-columns-2', label: 'Two Columns', create: () => ({ type: 'columns', count: 2 as const, columns: ['', ''] }) },
   { cat: 'Layout', type: 'columns-3', icon: 'ti-columns-3', label: 'Three Columns', create: () => ({ type: 'columns', count: 3 as const, columns: ['', '', ''] }) },
@@ -99,7 +108,7 @@ export function blocksToMarkdown(blocks: Block[]): string {
       case 'image': return b.url ? `![${b.caption}](${b.url})` : ''
       case 'recall': return `??${b.content}??`
       case 'card': {
-        let h = '<div class="sc-card">'
+        let h = `<div class="sc-card sc-card-${b.variant || 'default'}">`
         if (b.title || b.description) {
           h += '<div class="sc-card-header">'
           if (b.title) h += `<div class="sc-card-title">${b.title}</div>`
@@ -107,6 +116,7 @@ export function blocksToMarkdown(blocks: Block[]): string {
           h += '</div>'
         }
         if (b.content) h += `<div class="sc-card-content">${b.content}</div>`
+        if (b.footer) h += `<div class="sc-card-footer">${b.footer}</div>`
         return h + '</div>'
       }
       case 'alert': {
@@ -280,9 +290,18 @@ function BlockCallout({ block, update }: { block: CalloutBlock; update: (d: Part
 function BlockCard({ block, update }: { block: CardBlock; update: (d: Partial<CardBlock>) => void }) {
   return (
     <div className="be-card">
+      <div className="be-card-variant-row">
+        <label className="stat-label">Style</label>
+        <select value={block.variant || 'default'} onChange={e => update({ variant: e.target.value as CardBlock['variant'] })}>
+          <option value="default">Default</option>
+          <option value="accent">Accent</option>
+          <option value="outlined">Outlined</option>
+        </select>
+      </div>
       <input className="be-card-title" value={block.title} onChange={e => update({ title: e.target.value })} placeholder="Card Title" />
       <input className="be-card-desc" value={block.description} onChange={e => update({ description: e.target.value })} placeholder="Description (optional)" />
       <AutoTextarea className="be-card-content" value={block.content} onChange={v => update({ content: v })} placeholder="Content..." />
+      <input className="be-card-footer" value={block.footer || ''} onChange={e => update({ footer: e.target.value })} placeholder="Footer (optional)" />
     </div>
   )
 }
@@ -535,10 +554,15 @@ function PreviewBlock({ block }: { block: Block }) {
       )
     }
     case 'card': return (
-      <div className="bp-card">
-        {block.title && <div className="bp-card-title">{block.title}</div>}
-        {block.description && <div className="bp-card-desc">{block.description}</div>}
+      <div className={`bp-card bp-card-${block.variant || 'default'}`}>
+        {(block.title || block.description) && (
+          <div className="bp-card-header">
+            {block.title && <div className="bp-card-title">{block.title}</div>}
+            {block.description && <div className="bp-card-desc">{block.description}</div>}
+          </div>
+        )}
         {block.content && <div className="bp-card-body">{block.content}</div>}
+        {block.footer && <div className="bp-card-footer">{block.footer}</div>}
       </div>
     )
     case 'alert': {
