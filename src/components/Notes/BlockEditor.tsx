@@ -22,8 +22,9 @@ interface ColumnsBlock extends BlockBase { type: 'columns'; count: 2 | 3; column
 interface TableBlock extends BlockBase { type: 'table'; headers: string[]; rows: string[][] }
 interface RecallBlock extends BlockBase { type: 'recall'; content: string }
 interface ImageBlock extends BlockBase { type: 'image'; url: string; caption: string }
+interface BadgeBlock extends BlockBase { type: 'badge'; items: { text: string; variant: 'default' | 'secondary' | 'outline' | 'destructive' }[] }
 
-type Block = TextBlock | HeadingBlock | BulletListBlock | NumberListBlock | ChecklistBlock | QuoteBlock | DividerBlock | CodeBlock | CalloutBlock | CardBlock | AlertBlock | AccordionBlock | StepsBlock | ProgressBlock | ColumnsBlock | TableBlock | RecallBlock | ImageBlock
+type Block = TextBlock | HeadingBlock | BulletListBlock | NumberListBlock | ChecklistBlock | QuoteBlock | DividerBlock | CodeBlock | CalloutBlock | CardBlock | AlertBlock | AccordionBlock | StepsBlock | ProgressBlock | ColumnsBlock | TableBlock | RecallBlock | ImageBlock | BadgeBlock
 
 /* ---- catalog ---- */
 
@@ -57,6 +58,7 @@ const CATALOG: CatalogItem[] = [
   { cat: 'Components', type: 'steps', icon: 'ti-list-check', label: 'Steps', create: () => ({ type: 'steps', steps: [{ title: 'Step 1', description: 'Description' }] }) },
   { cat: 'Components', type: 'progress', icon: 'ti-chart-bar', label: 'Progress Bar', create: () => ({ type: 'progress', label: 'Progress', value: 50 }) },
   { cat: 'Components', type: 'table', icon: 'ti-table', label: 'Table', create: () => ({ type: 'table', headers: ['Header 1', 'Header 2', 'Header 3'], rows: [['', '', ''], ['', '', '']] }) },
+  { cat: 'Components', type: 'badge', icon: 'ti-tag', label: 'Badges', create: () => ({ type: 'badge', items: [{ text: 'Badge', variant: 'default' as const }] }) },
 
   { cat: 'Card Templates', type: 'tpl-project', icon: 'ti-rocket', label: 'Create Project', create: () => ({ type: 'card', variant: 'default' as const, title: 'Create project', description: 'Deploy your new project in one click.', content: 'Name: My Project\nFramework: React', footer: 'Cancel | Deploy' }) },
   { cat: 'Card Templates', type: 'tpl-notifications', icon: 'ti-bell', label: 'Notifications', create: () => ({ type: 'card', variant: 'default' as const, title: 'Notifications', description: 'You have 3 unread messages.', content: 'Meeting tomorrow at 9am\nNew comment on your post\nSubscription renewing soon', footer: 'Mark all as read' }) },
@@ -107,6 +109,7 @@ export function blocksToMarkdown(blocks: Block[]): string {
       case 'callout': return `> [!${b.variant}] ${b.title}\n` + b.content.split('\n').map(l => `> ${l}`).join('\n')
       case 'image': return b.url ? `![${b.caption}](${b.url})` : ''
       case 'recall': return `??${b.content}??`
+      case 'badge': return b.items.map(item => `\`${item.text}\``).join(' ')
       case 'card': {
         let h = `<div class="sc-card sc-card-${b.variant || 'default'}">`
         if (b.title || b.description) {
@@ -164,6 +167,61 @@ const AutoTextarea = forwardRef<HTMLTextAreaElement, AutoTextareaProps>(
   }
 )
 
+/* ---- format toolbar ---- */
+
+const FMT_BUTTONS: { icon: string; label: string; prefix: string; suffix: string }[] = [
+  { icon: 'ti-bold', label: 'Bold', prefix: '**', suffix: '**' },
+  { icon: 'ti-italic', label: 'Italic', prefix: '*', suffix: '*' },
+  { icon: 'ti-underline', label: 'Underline', prefix: '<u>', suffix: '</u>' },
+  { icon: 'ti-strikethrough', label: 'Strikethrough', prefix: '~~', suffix: '~~' },
+  { icon: 'ti-code', label: 'Inline code', prefix: '`', suffix: '`' },
+  { icon: 'ti-link', label: 'Link', prefix: '[', suffix: '](url)' },
+]
+
+function FormatToolbar({ textareaRef, value, onChange }: { textareaRef: React.RefObject<HTMLTextAreaElement | null>; value: string; onChange: (v: string) => void }) {
+  function applyFormat(prefix: string, suffix: string) {
+    const el = textareaRef.current
+    if (!el) return
+    const start = el.selectionStart
+    const end = el.selectionEnd
+    const selected = value.slice(start, end)
+    const replacement = prefix + (selected || 'text') + suffix
+    const next = value.slice(0, start) + replacement + value.slice(end)
+    onChange(next)
+    setTimeout(() => {
+      el.focus()
+      if (selected) {
+        el.setSelectionRange(start + prefix.length, start + prefix.length + selected.length)
+      } else {
+        el.setSelectionRange(start + prefix.length, start + prefix.length + 4)
+      }
+    }, 0)
+  }
+
+  return (
+    <div className="be-fmt-toolbar">
+      {FMT_BUTTONS.map(btn => (
+        <button key={btn.icon} className="be-fmt-btn" onClick={() => applyFormat(btn.prefix, btn.suffix)} title={btn.label} type="button">
+          <i className={`ti ${btn.icon}`} />
+        </button>
+      ))}
+    </div>
+  )
+}
+
+function RichTextarea({ value, onChange, className, placeholder, onKeyDown }: {
+  value: string; onChange: (v: string) => void; className?: string; placeholder?: string; onKeyDown?: (e: React.KeyboardEvent) => void
+}) {
+  const ref = useRef<HTMLTextAreaElement>(null)
+  const [focused, setFocused] = useState(false)
+  return (
+    <div className="be-rich-wrap">
+      {focused && <FormatToolbar textareaRef={ref} value={value} onChange={onChange} />}
+      <AutoTextarea ref={ref} className={className} value={value} onChange={onChange} placeholder={placeholder} onKeyDown={onKeyDown} onFocus={() => setFocused(true)} onBlur={() => setTimeout(() => setFocused(false), 200)} />
+    </div>
+  )
+}
+
 /* ---- block renderers ---- */
 
 interface RenderOpts {
@@ -174,7 +232,7 @@ function BlockText({ block, update, opts }: { block: TextBlock; update: (d: Part
   return (
     <div className="be-field-group">
       <div className="be-field-label">Text</div>
-      <AutoTextarea
+      <RichTextarea
         className="be-field-textarea"
         value={block.content}
         onChange={v => update({ content: v })}
@@ -302,7 +360,7 @@ function BlockCallout({ block, update }: { block: CalloutBlock; update: (d: Part
       <div className="be-field-label">Title</div>
       <input className="be-field-input" value={block.title} onChange={e => update({ title: e.target.value })} placeholder="Callout title" />
       <div className="be-field-label">Content</div>
-      <AutoTextarea className="be-field-textarea" value={block.content} onChange={v => update({ content: v })} placeholder="Write callout content..." />
+      <RichTextarea className="be-field-textarea" value={block.content} onChange={v => update({ content: v })} placeholder="Write callout content..." />
     </div>
   )
 }
@@ -344,7 +402,7 @@ function BlockCard({ block, update }: { block: CardBlock; update: (d: Partial<Ca
       <div className="be-field-label">Description</div>
       <input className="be-field-input" value={block.description} onChange={e => update({ description: e.target.value })} placeholder="Short description" />
       <div className="be-field-label">Content</div>
-      <AutoTextarea className="be-field-textarea" value={block.content} onChange={v => update({ content: v })} placeholder="Card body content..." />
+      <RichTextarea className="be-field-textarea" value={block.content} onChange={v => update({ content: v })} placeholder="Card body content..." />
       <div className="be-field-label">Footer</div>
       <input className="be-field-input" value={block.footer || ''} onChange={e => update({ footer: e.target.value })} placeholder="Footer actions or text" />
     </div>
@@ -372,7 +430,7 @@ function BlockAlert({ block, update }: { block: AlertBlock; update: (d: Partial<
       <div className="be-field-label">Title</div>
       <input className="be-field-input" value={block.title} onChange={e => update({ title: e.target.value })} placeholder="Alert title" />
       <div className="be-field-label">Message</div>
-      <AutoTextarea className="be-field-textarea" value={block.content} onChange={v => update({ content: v })} placeholder="Alert message..." />
+      <RichTextarea className="be-field-textarea" value={block.content} onChange={v => update({ content: v })} placeholder="Alert message..." />
     </div>
   )
 }
@@ -483,7 +541,7 @@ function RenderBlock({ block, update, opts }: { block: Block; update: (d: any) =
     case 'quote': return (
       <div className="be-field-group">
         <div className="be-field-label">Quote</div>
-        <AutoTextarea className="be-field-textarea" value={block.content} onChange={v => update({ content: v })} placeholder="Write your quote..." />
+        <RichTextarea className="be-field-textarea" value={block.content} onChange={v => update({ content: v })} placeholder="Write your quote..." />
       </div>
     )
     case 'divider': return (
@@ -547,6 +605,31 @@ function RenderBlock({ block, update, opts }: { block: Block; update: (d: any) =
         <input className="be-field-input" value={block.caption} onChange={e => update({ caption: e.target.value })} placeholder="Image caption (optional)" />
       </div>
     )
+    case 'badge': return (
+      <div className="be-field-group">
+        <div className="be-field-label">Badges</div>
+        <div className="be-badge-list">
+          {block.items.map((item, i) => (
+            <div key={i} className="be-badge-item">
+              <input className="be-field-input" value={item.text} onChange={e => { const items = [...block.items]; items[i] = { ...items[i], text: e.target.value }; update({ items }) }} placeholder="Badge text" style={{ flex: 1 }} />
+              <div className="be-badge-variants">
+                {(['default', 'secondary', 'outline', 'destructive'] as const).map(v => (
+                  <button key={v} className={`be-badge-vpick be-badge-${v} ${item.variant === v ? 'be-badge-vpick-active' : ''}`} onClick={() => { const items = [...block.items]; items[i] = { ...items[i], variant: v }; update({ items }) }}>
+                    {v.charAt(0).toUpperCase() + v.slice(1)}
+                  </button>
+                ))}
+              </div>
+              {block.items.length > 1 && (
+                <button className="be-mini-btn" onClick={() => { const items = [...block.items]; items.splice(i, 1); update({ items }) }}><i className="ti ti-x" /></button>
+              )}
+            </div>
+          ))}
+        </div>
+        <button className="be-add-sub" onClick={() => update({ items: [...block.items, { text: '', variant: 'default' as const }] })}>
+          <i className="ti ti-plus" /> Add badge
+        </button>
+      </div>
+    )
     default: return <div className="be-field-note">Unknown block type</div>
   }
 }
@@ -572,6 +655,7 @@ const BLOCK_META: Record<string, { label: string; icon: string }> = {
   table: { label: 'Table', icon: 'ti-table' },
   recall: { label: 'Active Recall', icon: 'ti-brain' },
   image: { label: 'Image', icon: 'ti-photo' },
+  badge: { label: 'Badges', icon: 'ti-tag' },
 }
 
 function blockSummary(block: Block): string {
@@ -593,6 +677,7 @@ function blockSummary(block: Block): string {
     case 'table': return `${block.headers.length}x${block.rows.length} table`
     case 'recall': return block.content?.slice(0, 40) || 'Hidden answer'
     case 'image': return block.caption || block.url?.slice(0, 40) || 'No image'
+    case 'badge': return block.items.map(b => b.text).join(', ') || 'No badges'
     default: return ''
   }
 }
@@ -712,6 +797,13 @@ function PreviewBlock({ block }: { block: Block }) {
         {block.caption && <figcaption>{block.caption}</figcaption>}
       </figure>
     ) : <div className="bp-empty" style={{ padding: 20, textAlign: 'center' }}>No image set</div>
+    case 'badge': return (
+      <div className="bp-badge-group">
+        {block.items.map((item, i) => (
+          <span key={i} className={`bp-badge bp-badge-${item.variant}`}>{item.text || 'Badge'}</span>
+        ))}
+      </div>
+    )
     default: return null
   }
 }
