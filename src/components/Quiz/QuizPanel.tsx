@@ -1,7 +1,19 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
+import { blocksToMarkdown } from '../Notes/BlockEditor'
 import type { Note, Course } from '../../types/database'
+
+function getContentAsMarkdown(content: string | null): string {
+  if (!content?.trim()) return ''
+  try {
+    const parsed = JSON.parse(content)
+    if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].type) {
+      return blocksToMarkdown(parsed)
+    }
+  } catch { /* not JSON */ }
+  return content
+}
 
 interface Question {
   q: string
@@ -50,7 +62,7 @@ export default function QuizPanel() {
     try {
       const { data, error: fnError } = await supabase.functions.invoke('generate-quiz', {
         body: {
-          content: note.content,
+          content: getContentAsMarkdown(note.content),
           title: note.title,
           courseCode: getCourseCode(note.course_id),
           numQuestions,

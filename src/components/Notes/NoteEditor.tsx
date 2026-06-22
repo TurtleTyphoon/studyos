@@ -13,7 +13,18 @@ import FloatingToolbar from './FloatingToolbar'
 import CommandPalette from './CommandPalette'
 import BacklinksPanel from './BacklinksPanel'
 import TypographyToolbar from './TypographyToolbar'
-import SimpleEditor from './SimpleEditor'
+import BlockEditor, { blocksToMarkdown } from './BlockEditor'
+
+function getMarkdownContent(content: string): string {
+  if (!content?.trim()) return ''
+  try {
+    const parsed = JSON.parse(content)
+    if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].type) {
+      return blocksToMarkdown(parsed)
+    }
+  } catch { /* not JSON, treat as markdown */ }
+  return content
+}
 
 interface NoteEditorProps {
   note: Note | null
@@ -221,7 +232,7 @@ export default function NoteEditor({ note, courses, allNotes, onSave, onClose, o
   const [courseId, setCourseId] = useState(note?.course_id ?? '')
   const [week, setWeek] = useState(note?.week?.toString() ?? '')
   const [concepts, setConcepts] = useState(note?.concepts?.join(', ') ?? '')
-  const [mode, setMode] = useState<'simple' | 'edit' | 'preview' | 'study'>('simple')
+  const [mode, setMode] = useState<'blocks' | 'edit' | 'preview' | 'study'>('blocks')
   const [saving, setSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState<string | null>(null)
   const [splitFile, setSplitFile] = useState<string | null>(null)
@@ -405,7 +416,7 @@ export default function NoteEditor({ note, courses, allNotes, onSave, onClose, o
           </div>
           <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
             {lastSaved && <span style={{ fontSize: 10, color: 'var(--subtle)' }}>Saved {lastSaved}</span>}
-            {(mode === 'edit' || mode === 'simple') && (
+            {(mode === 'edit' || mode === 'blocks') && (
               <>
                 <button className="btn" onClick={insertRecallBlock} title="Insert recall block">
                   <i className="ti ti-brain" style={{ fontSize: 12 }} />??
@@ -428,8 +439,8 @@ export default function NoteEditor({ note, courses, allNotes, onSave, onClose, o
               </>
             )}
             <div className="note-editor-mode-toggle">
-              <button className={`mode-btn ${mode === 'simple' ? 'active' : ''}`} onClick={() => setMode('simple')} title="Rich text editor">
-                <i className="ti ti-pencil" style={{ fontSize: 12 }} />Write
+              <button className={`mode-btn ${mode === 'blocks' ? 'active' : ''}`} onClick={() => setMode('blocks')} title="Block editor">
+                <i className="ti ti-layout-list" style={{ fontSize: 12 }} />Build
               </button>
               <button className={`mode-btn ${mode === 'edit' ? 'active' : ''}`} onClick={() => setMode('edit')} title="Markdown editor">
                 <i className="ti ti-code" style={{ fontSize: 12 }} />Markdown
@@ -481,8 +492,8 @@ export default function NoteEditor({ note, courses, allNotes, onSave, onClose, o
         )}
 
         <div className="note-editor-main-pane" style={{ position: 'relative' }}>
-          {mode === 'simple' ? (
-            <SimpleEditor content={content} onContentChange={setContent} />
+          {mode === 'blocks' ? (
+            <BlockEditor content={content} onContentChange={setContent} />
           ) : mode === 'edit' ? (
             <div className="editor-write-pane" style={{ position: 'relative' }}>
               <TypographyToolbar textareaRef={textareaRef} content={content} onContentChange={setContent} />
@@ -515,7 +526,7 @@ export default function NoteEditor({ note, courses, allNotes, onSave, onClose, o
           ) : (
             <div className="note-editor-preview markdown-body">
               {content ? (
-                renderMarkdownWithFeatures(content, allNotes, onOpenNote, mode === 'study')
+                renderMarkdownWithFeatures(getMarkdownContent(content), allNotes, onOpenNote, mode === 'study')
               ) : (
                 <p style={{ color: 'var(--subtle)' }}>Nothing to preview yet.</p>
               )}
@@ -523,7 +534,7 @@ export default function NoteEditor({ note, courses, allNotes, onSave, onClose, o
           )}
         </div>
 
-        {!focusMode && showBacklinks && (mode === 'edit' || mode === 'simple') && !splitFile && (
+        {!focusMode && showBacklinks && (mode === 'edit' || mode === 'blocks') && !splitFile && (
           <BacklinksPanel currentNote={note} allNotes={allNotes} onOpenNote={onOpenNote} />
         )}
       </div>
