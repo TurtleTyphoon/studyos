@@ -1077,24 +1077,17 @@ export default function BlockEditor({ content, onContentChange, previewOnly, not
     return (
       <div className="ep-container" ref={containerRef}>
         <div className="ep-header">
-          {courseName && (
-            <div className="ep-directory">
-              <span>Notes</span>
-              <i className="ti ti-chevron-right" />
-              <span>{courseName}</span>
-              {noteTitle && (<><i className="ti ti-chevron-right" /><span className="ep-dir-current">{noteTitle}</span></>)}
-            </div>
-          )}
+          <div className="ep-directory">
+            <span>Notes</span>
+            {courseName && (<><i className="ti ti-chevron-right" /><span>{courseName}</span></>)}
+            <i className="ti ti-chevron-right" />
+            <span className="ep-dir-current">{noteTitle || 'Untitled'}</span>
+          </div>
           <h1 className="ep-title">{noteTitle || 'Untitled'}</h1>
           <input className="ep-subtitle" value={meta.subtitle} onChange={e => syncMeta({ ...meta, subtitle: e.target.value })} placeholder="Add a subtitle..." />
-          <div className="ep-meta-section">
+          <div className="ep-excerpt-section">
             <label className="ep-meta-label">Featured excerpt</label>
-            <p className="ep-meta-hint">This will be displayed on the note card and search results.</p>
-            <textarea className="ep-excerpt" value={meta.excerpt} onChange={e => syncMeta({ ...meta, excerpt: e.target.value })} placeholder="Write a short excerpt..." rows={3} />
-          </div>
-          <div className="ep-meta-section">
-            <label className="ep-meta-label">Description</label>
-            <input className="ep-description" value={meta.description} onChange={e => syncMeta({ ...meta, description: e.target.value })} placeholder="Brief description of this note..." />
+            <p className="ep-meta-hint">This will be displayed on both the note card and search results.</p>
           </div>
         </div>
         <div className="ep-toolbar">
