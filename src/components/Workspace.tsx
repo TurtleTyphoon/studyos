@@ -57,7 +57,7 @@ export default function Workspace() {
     if (!user) return
     const { data, error } = await supabase
       .from('notes')
-      .insert({ user_id: user.id, title: 'New note', content: '[]', file_type: 'text' })
+      .insert({ user_id: user.id, title: 'New note', content: '[]', file_type: 'text', concepts: [] })
       .select('id, title, content, created_at')
       .single()
     if (data && !error) {

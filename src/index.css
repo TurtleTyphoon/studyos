@@ -5,19 +5,19 @@
 
 :root{
   --font:'Inter',system-ui,-apple-system,sans-serif;
-  --bg:#292929;
-  --bg-surface:#303030;
-  --bg-hover:#363636;
-  --bg-active:#3d3d3d;
-  --bg-input:#393939;
-  --border:#444;
-  --border-subtle:#3a3a3a;
-  --text:#ececec;
-  --text-secondary:#a0a0a0;
-  --text-tertiary:#737373;
+  --bg:#f9f9f8;
+  --bg-surface:#ffffff;
+  --bg-hover:#f0efed;
+  --bg-active:#e8e7e5;
+  --bg-input:#ffffff;
+  --border:#e5e4e2;
+  --border-subtle:#eeeded;
+  --text:#1a1a1a;
+  --text-secondary:#666;
+  --text-tertiary:#999;
   --accent:#c96442;
-  --accent-hover:#d4754f;
-  --accent-surface:rgba(201,100,66,.12);
+  --accent-hover:#b85838;
+  --accent-surface:rgba(201,100,66,.08);
   --radius:12px;
   --radius-sm:8px;
   --radius-xs:6px;
@@ -65,7 +65,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:14
 .sidebar-email{font-size:10px;color:var(--text-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 /* ---- Main pane ---- */
-.main{flex:1;display:flex;flex-direction:column;min-width:0;background:#1e1e1e}
+.main{flex:1;display:flex;flex-direction:column;min-width:0;background:#ffffff}
 
 .main-header{padding:12px 20px;border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;gap:12px;flex-shrink:0}
 .main-title{font-size:14px;font-weight:600;color:var(--text);flex:1}
