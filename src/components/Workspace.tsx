@@ -54,17 +54,13 @@ export default function Workspace() {
   }, [activeId, user])
 
   async function createNote() {
-    if (!user) { alert('Not logged in'); return }
-    const payload = { user_id: user.id, title: 'New note', content: '[]', concepts: [] as string[], course_id: null }
+    if (!user) return
     const { data, error } = await supabase
       .from('notes')
-      .insert(payload)
+      .insert({ user_id: user.id, title: 'New note', content: '[]', concepts: [] as string[], course_id: null })
       .select('id, title, content, created_at')
       .single()
-    if (error) {
-      alert('Create failed: ' + error.message)
-      return
-    }
+    if (error) return
     if (data) {
       setNotes(prev => [data, ...prev])
       setActiveId(data.id)
