@@ -172,25 +172,40 @@ interface RenderOpts {
 
 function BlockText({ block, update, opts }: { block: TextBlock; update: (d: Partial<TextBlock>) => void; opts: RenderOpts }) {
   return (
-    <AutoTextarea
-      className="be-text"
-      value={block.content}
-      onChange={v => update({ content: v })}
-      placeholder="Type something..."
-      onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); opts.onEnter?.() } }}
-    />
+    <div className="be-field-group">
+      <div className="be-field-label">Text</div>
+      <AutoTextarea
+        className="be-field-textarea"
+        value={block.content}
+        onChange={v => update({ content: v })}
+        placeholder="Type something..."
+        onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); opts.onEnter?.() } }}
+      />
+    </div>
   )
 }
 
 function BlockHeading({ block, update, opts }: { block: HeadingBlock; update: (d: Partial<HeadingBlock>) => void; opts: RenderOpts }) {
   return (
-    <input
-      className={`be-heading be-h${block.level}`}
-      value={block.content}
-      onChange={e => update({ content: e.target.value })}
-      placeholder={`Heading ${block.level}`}
-      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); opts.onEnter?.() } }}
-    />
+    <div className="be-field-group">
+      <div className="be-field-label">Level</div>
+      <div className="be-visual-picker">
+        {([1, 2, 3, 4] as const).map(lvl => (
+          <button key={lvl} className={`be-vpick ${block.level === lvl ? 'be-vpick-active' : ''}`} onClick={() => update({ level: lvl })}>
+            <i className={`ti ti-h-${lvl}`} />
+            <span>H{lvl}</span>
+          </button>
+        ))}
+      </div>
+      <div className="be-field-label">Text</div>
+      <input
+        className="be-field-input"
+        value={block.content}
+        onChange={e => update({ content: e.target.value })}
+        placeholder={`Heading ${block.level}`}
+        onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); opts.onEnter?.() } }}
+      />
+    </div>
   )
 }
 
@@ -272,54 +287,92 @@ function BlockChecklist({ block, update }: { block: ChecklistBlock; update: (d: 
 function BlockCallout({ block, update }: { block: CalloutBlock; update: (d: Partial<CalloutBlock>) => void }) {
   const variants = ['tip', 'note', 'warning', 'important', 'info', 'example', 'question']
   const colors: Record<string, string> = { tip: 'var(--green)', note: '#2563eb', warning: 'var(--yellow)', important: 'var(--red)', info: '#2563eb', example: '#7c3aed', question: '#d97706' }
-  const bgs: Record<string, string> = { tip: 'var(--green-bg)', note: '#eff6ff', warning: 'var(--yellow-bg)', important: 'var(--red-bg)', info: '#eff6ff', example: '#f5f3ff', question: '#fffbeb' }
-  const c = colors[block.variant] || '#2563eb'
+  const icons: Record<string, string> = { tip: 'ti-bulb', note: 'ti-note', warning: 'ti-alert-triangle', important: 'ti-urgent', info: 'ti-info-circle', example: 'ti-flask', question: 'ti-help' }
   return (
-    <div className="be-callout" style={{ borderLeftColor: c, background: bgs[block.variant] || '#eff6ff' }}>
-      <div className="be-callout-header">
-        <select className="be-callout-type" value={block.variant} onChange={e => update({ variant: e.target.value })} style={{ color: c }}>
-          {variants.map(v => <option key={v} value={v}>{v.charAt(0).toUpperCase() + v.slice(1)}</option>)}
-        </select>
-        <input className="be-callout-title" value={block.title} onChange={e => update({ title: e.target.value })} placeholder="Title" style={{ color: c }} />
+    <div className="be-field-group">
+      <div className="be-field-label">Type</div>
+      <div className="be-visual-picker">
+        {variants.map(v => (
+          <button key={v} className={`be-vpick ${block.variant === v ? 'be-vpick-active' : ''}`} onClick={() => update({ variant: v })} style={{ '--vpick-color': colors[v] } as React.CSSProperties}>
+            <i className={`ti ${icons[v]}`} />
+            <span>{v.charAt(0).toUpperCase() + v.slice(1)}</span>
+          </button>
+        ))}
       </div>
-      <AutoTextarea className="be-callout-content" value={block.content} onChange={v => update({ content: v })} placeholder="Content..." />
+      <div className="be-field-label">Title</div>
+      <input className="be-field-input" value={block.title} onChange={e => update({ title: e.target.value })} placeholder="Callout title" />
+      <div className="be-field-label">Content</div>
+      <AutoTextarea className="be-field-textarea" value={block.content} onChange={v => update({ content: v })} placeholder="Write callout content..." />
     </div>
   )
 }
 
 function BlockCard({ block, update }: { block: CardBlock; update: (d: Partial<CardBlock>) => void }) {
+  const variants: { key: CardBlock['variant']; label: string; icon: string }[] = [
+    { key: 'default', label: 'Default', icon: 'ti-layout-cards' },
+    { key: 'accent', label: 'Accent', icon: 'ti-bolt' },
+    { key: 'outlined', label: 'Outlined', icon: 'ti-square' },
+  ]
   return (
-    <div className="be-card">
-      <div className="be-card-variant-row">
-        <label className="stat-label">Style</label>
-        <select value={block.variant || 'default'} onChange={e => update({ variant: e.target.value as CardBlock['variant'] })}>
-          <option value="default">Default</option>
-          <option value="accent">Accent</option>
-          <option value="outlined">Outlined</option>
-        </select>
+    <div className="be-field-group">
+      <div className="be-field-label">Style</div>
+      <div className="be-style-thumbs">
+        {variants.map(v => (
+          <button key={v.key} className={`be-thumb ${(block.variant || 'default') === v.key ? 'be-thumb-active' : ''}`} onClick={() => update({ variant: v.key })}>
+            <div className={`be-thumb-preview be-thumb-${v.key}`}>
+              <div className="be-thumb-line be-thumb-title" />
+              <div className="be-thumb-line be-thumb-sub" />
+              <div className="be-thumb-line be-thumb-body" />
+              <div className="be-thumb-line be-thumb-body be-thumb-short" />
+            </div>
+            <span>{v.label}</span>
+          </button>
+        ))}
       </div>
-      <input className="be-card-title" value={block.title} onChange={e => update({ title: e.target.value })} placeholder="Card Title" />
-      <input className="be-card-desc" value={block.description} onChange={e => update({ description: e.target.value })} placeholder="Description (optional)" />
-      <AutoTextarea className="be-card-content" value={block.content} onChange={v => update({ content: v })} placeholder="Content..." />
-      <input className="be-card-footer" value={block.footer || ''} onChange={e => update({ footer: e.target.value })} placeholder="Footer (optional)" />
+      <div className="be-field-row">
+        <div className="be-field-col">
+          <div className="be-field-label">Title</div>
+          <input className="be-field-input" value={block.title} onChange={e => update({ title: e.target.value })} placeholder="Card title" />
+        </div>
+        <div className="be-field-toggle">
+          <div className="be-field-label">Title</div>
+          <button className={`be-toggle ${block.title ? 'be-toggle-on' : ''}`} onClick={() => update({ title: block.title ? '' : 'Card Title' })}>
+            <div className="be-toggle-dot" />
+          </button>
+        </div>
+      </div>
+      <div className="be-field-label">Description</div>
+      <input className="be-field-input" value={block.description} onChange={e => update({ description: e.target.value })} placeholder="Short description" />
+      <div className="be-field-label">Content</div>
+      <AutoTextarea className="be-field-textarea" value={block.content} onChange={v => update({ content: v })} placeholder="Card body content..." />
+      <div className="be-field-label">Footer</div>
+      <input className="be-field-input" value={block.footer || ''} onChange={e => update({ footer: e.target.value })} placeholder="Footer actions or text" />
     </div>
   )
 }
 
 function BlockAlert({ block, update }: { block: AlertBlock; update: (d: Partial<AlertBlock>) => void }) {
-  const icons: Record<string, string> = { info: 'ti-info-circle', warning: 'ti-alert-triangle', error: 'ti-alert-octagon', success: 'ti-circle-check' }
-  const colors: Record<string, string> = { info: '#1e40af', warning: '#854d0e', error: '#991b1b', success: '#166534' }
-  const bgs: Record<string, string> = { info: '#eff6ff', warning: '#fefce8', error: '#fef2f2', success: '#f0fdf4' }
+  const variants: { key: AlertBlock['variant']; icon: string; color: string; bg: string }[] = [
+    { key: 'info', icon: 'ti-info-circle', color: '#1e40af', bg: '#eff6ff' },
+    { key: 'success', icon: 'ti-circle-check', color: '#166534', bg: '#f0fdf4' },
+    { key: 'warning', icon: 'ti-alert-triangle', color: '#854d0e', bg: '#fefce8' },
+    { key: 'error', icon: 'ti-alert-octagon', color: '#991b1b', bg: '#fef2f2' },
+  ]
   return (
-    <div className="be-alert" style={{ background: bgs[block.variant], color: colors[block.variant], borderColor: colors[block.variant] + '40' }}>
-      <div className="be-alert-header">
-        <i className={`ti ${icons[block.variant]}`} />
-        <select className="be-alert-variant" value={block.variant} onChange={e => update({ variant: e.target.value as AlertBlock['variant'] })}>
-          <option value="info">Info</option><option value="warning">Warning</option><option value="error">Error</option><option value="success">Success</option>
-        </select>
+    <div className="be-field-group">
+      <div className="be-field-label">Variant</div>
+      <div className="be-visual-picker">
+        {variants.map(v => (
+          <button key={v.key} className={`be-vpick ${block.variant === v.key ? 'be-vpick-active' : ''}`} onClick={() => update({ variant: v.key })} style={{ '--vpick-color': v.color, '--vpick-bg': v.bg } as React.CSSProperties}>
+            <i className={`ti ${v.icon}`} style={{ color: v.color }} />
+            <span>{v.key.charAt(0).toUpperCase() + v.key.slice(1)}</span>
+          </button>
+        ))}
       </div>
-      <input className="be-alert-title" value={block.title} onChange={e => update({ title: e.target.value })} placeholder="Title" />
-      <AutoTextarea className="be-alert-content" value={block.content} onChange={v => update({ content: v })} placeholder="Alert message..." />
+      <div className="be-field-label">Title</div>
+      <input className="be-field-input" value={block.title} onChange={e => update({ title: e.target.value })} placeholder="Alert title" />
+      <div className="be-field-label">Message</div>
+      <AutoTextarea className="be-field-textarea" value={block.content} onChange={v => update({ content: v })} placeholder="Alert message..." />
     </div>
   )
 }
@@ -409,21 +462,41 @@ function RenderBlock({ block, update, opts }: { block: Block; update: (d: any) =
   switch (block.type) {
     case 'text': return <BlockText block={block} update={update} opts={opts} />
     case 'heading': return <BlockHeading block={block} update={update} opts={opts} />
-    case 'bullet-list': return <ListItems items={block.items} onChange={items => update({ items })} marker={() => '•'} />
-    case 'number-list': return <ListItems items={block.items} onChange={items => update({ items })} marker={i => `${i + 1}.`} />
-    case 'checklist': return <BlockChecklist block={block} update={update} />
-    case 'quote': return (
-      <div className="be-quote">
-        <AutoTextarea className="be-quote-text" value={block.content} onChange={v => update({ content: v })} placeholder="Quote..." />
+    case 'bullet-list': return (
+      <div className="be-field-group">
+        <div className="be-field-label">Items</div>
+        <ListItems items={block.items} onChange={items => update({ items })} marker={() => '•'} />
       </div>
     )
-    case 'divider': return <hr className="be-divider" />
+    case 'number-list': return (
+      <div className="be-field-group">
+        <div className="be-field-label">Items</div>
+        <ListItems items={block.items} onChange={items => update({ items })} marker={i => `${i + 1}.`} />
+      </div>
+    )
+    case 'checklist': return (
+      <div className="be-field-group">
+        <div className="be-field-label">Tasks</div>
+        <BlockChecklist block={block} update={update} />
+      </div>
+    )
+    case 'quote': return (
+      <div className="be-field-group">
+        <div className="be-field-label">Quote</div>
+        <AutoTextarea className="be-field-textarea" value={block.content} onChange={v => update({ content: v })} placeholder="Write your quote..." />
+      </div>
+    )
+    case 'divider': return (
+      <div className="be-field-group">
+        <div className="be-field-note"><i className="ti ti-minus" /> Horizontal divider -- no settings needed</div>
+      </div>
+    )
     case 'code': return (
-      <div className="be-code">
-        <div className="be-code-header">
-          <input className="be-code-lang" value={block.language} onChange={e => update({ language: e.target.value })} placeholder="language" />
-        </div>
-        <textarea className="be-code-content" value={block.content} onChange={e => update({ content: e.target.value })} placeholder="// code here" spellCheck={false} />
+      <div className="be-field-group">
+        <div className="be-field-label">Language</div>
+        <input className="be-field-input" value={block.language} onChange={e => update({ language: e.target.value })} placeholder="javascript, python, etc." />
+        <div className="be-field-label">Code</div>
+        <textarea className="be-field-code" value={block.content} onChange={e => update({ content: e.target.value })} placeholder="// paste or write code here" spellCheck={false} />
       </div>
     )
     case 'callout': return <BlockCallout block={block} update={update} />
@@ -432,34 +505,49 @@ function RenderBlock({ block, update, opts }: { block: Block; update: (d: any) =
     case 'accordion': return <BlockAccordion block={block} update={update} />
     case 'steps': return <BlockSteps block={block} update={update} />
     case 'progress': return (
-      <div className="be-progress">
-        <input className="be-progress-label" value={block.label} onChange={e => update({ label: e.target.value })} placeholder="Label" />
-        <input type="range" min={0} max={100} value={block.value} onChange={e => update({ value: parseInt(e.target.value) })} className="be-progress-range" />
-        <span className="be-progress-val">{block.value}%</span>
+      <div className="be-field-group">
+        <div className="be-field-label">Label</div>
+        <input className="be-field-input" value={block.label} onChange={e => update({ label: e.target.value })} placeholder="Progress label" />
+        <div className="be-field-label">Value -- {block.value}%</div>
+        <input type="range" min={0} max={100} value={block.value} onChange={e => update({ value: parseInt(e.target.value) })} className="be-field-range" />
       </div>
     )
     case 'columns': return (
-      <div className={`be-columns be-col-${block.count}`}>
-        {block.columns.map((col, i) => (
-          <AutoTextarea key={i} className="be-col-input" value={col} onChange={v => { const columns = [...block.columns]; columns[i] = v; update({ columns }) }} placeholder={`Column ${i + 1}`} />
-        ))}
+      <div className="be-field-group">
+        <div className="be-field-label">Columns</div>
+        <div className={`be-columns be-col-${block.count}`}>
+          {block.columns.map((col, i) => (
+            <div key={i} className="be-col-wrap">
+              <div className="be-field-label-sm">Column {i + 1}</div>
+              <AutoTextarea className="be-field-textarea" value={col} onChange={v => { const columns = [...block.columns]; columns[i] = v; update({ columns }) }} placeholder={`Content for column ${i + 1}`} />
+            </div>
+          ))}
+        </div>
       </div>
     )
-    case 'table': return <BlockTable block={block} update={update} />
+    case 'table': return (
+      <div className="be-field-group">
+        <div className="be-field-label">Table</div>
+        <BlockTable block={block} update={update} />
+      </div>
+    )
     case 'recall': return (
-      <div className="be-recall">
-        <div className="be-recall-label"><i className="ti ti-brain" style={{ fontSize: 11 }} /> Active Recall</div>
-        <AutoTextarea className="be-recall-content" value={block.content} onChange={v => update({ content: v })} placeholder="Hidden answer (revealed in Study mode)" />
+      <div className="be-field-group">
+        <div className="be-field-label"><i className="ti ti-brain" style={{ fontSize: 11 }} /> Hidden Answer</div>
+        <div className="be-field-hint">This content is hidden until the student clicks reveal in Study mode.</div>
+        <AutoTextarea className="be-field-textarea" value={block.content} onChange={v => update({ content: v })} placeholder="Write the answer to reveal..." />
       </div>
     )
     case 'image': return (
-      <div className="be-image">
-        {block.url && <img src={block.url} alt={block.caption} className="be-image-preview" />}
-        <input className="be-image-url" value={block.url} onChange={e => update({ url: e.target.value })} placeholder="Image URL" />
-        <input className="be-image-caption" value={block.caption} onChange={e => update({ caption: e.target.value })} placeholder="Caption (optional)" />
+      <div className="be-field-group">
+        {block.url && <img src={block.url} alt={block.caption} className="be-field-img-preview" />}
+        <div className="be-field-label">Image URL</div>
+        <input className="be-field-input" value={block.url} onChange={e => update({ url: e.target.value })} placeholder="https://example.com/image.png" />
+        <div className="be-field-label">Caption</div>
+        <input className="be-field-input" value={block.caption} onChange={e => update({ caption: e.target.value })} placeholder="Image caption (optional)" />
       </div>
     )
-    default: return <div style={{ padding: 8, color: 'var(--subtle)', fontSize: 11 }}>Unknown block type</div>
+    default: return <div className="be-field-note">Unknown block type</div>
   }
 }
 
