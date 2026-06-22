@@ -222,6 +222,140 @@ function renderMarkdownWithFeatures(
   })
 }
 
+interface Annotation {
+  id: string
+  blockId: string
+  text: string
+  comment: string
+  type: 'highlight' | 'comment' | 'suggestion'
+  createdAt: string
+}
+
+function AnnotatedView({ content, annotations, onAnnotationsChange, allNotes, onOpenNote }: {
+  content: string
+  annotations: Annotation[]
+  onAnnotationsChange: (a: Annotation[]) => void
+  allNotes: Note[]
+  onOpenNote: (note: Note) => void
+}) {
+  const [popover, setPopover] = useState<{ top: number; left: number; text: string } | null>(null)
+  const [commentText, setCommentText] = useState('')
+  const [commentType, setCommentType] = useState<Annotation['type']>('comment')
+  const [activeAnnotation, setActiveAnnotation] = useState<string | null>(null)
+  const viewRef = useRef<HTMLDivElement>(null)
+  const popoverRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handleMouseUp() {
+      const sel = window.getSelection()
+      if (!sel || sel.isCollapsed || !viewRef.current) { return }
+      const range = sel.getRangeAt(0)
+      if (!viewRef.current.contains(range.commonAncestorContainer)) return
+      const text = sel.toString().trim()
+      if (!text) return
+      const rect = range.getBoundingClientRect()
+      const containerRect = viewRef.current.getBoundingClientRect()
+      setPopover({
+        top: rect.bottom - containerRect.top + 8,
+        left: Math.min(rect.left - containerRect.left, containerRect.width - 280),
+        text,
+      })
+      setCommentText('')
+      setCommentType('comment')
+      setActiveAnnotation(null)
+    }
+    function handleMouseDown(e: MouseEvent) {
+      if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
+        setPopover(null)
+      }
+    }
+    document.addEventListener('mouseup', handleMouseUp)
+    document.addEventListener('mousedown', handleMouseDown)
+    return () => { document.removeEventListener('mouseup', handleMouseUp); document.removeEventListener('mousedown', handleMouseDown) }
+  }, [])
+
+  function addAnnotation() {
+    if (!popover) return
+    const annotation: Annotation = {
+      id: Math.random().toString(36).slice(2, 10),
+      blockId: '',
+      text: popover.text,
+      comment: commentText,
+      type: commentType,
+      createdAt: new Date().toISOString(),
+    }
+    onAnnotationsChange([...annotations, annotation])
+    setPopover(null)
+    window.getSelection()?.removeAllRanges()
+  }
+
+  function deleteAnnotation(id: string) {
+    onAnnotationsChange(annotations.filter(a => a.id !== id))
+    setActiveAnnotation(null)
+  }
+
+  const md = getMarkdownContent(content)
+
+  return (
+    <div className="av-container" ref={viewRef}>
+      <div className="av-content">
+        <div className="note-editor-preview markdown-body">
+          {md ? renderMarkdownWithFeatures(md, allNotes, onOpenNote, false) : (
+            <p style={{ color: 'var(--subtle)' }}>Nothing to view yet.</p>
+          )}
+        </div>
+
+        {popover && (
+          <div ref={popoverRef} className="av-popover" style={{ top: popover.top, left: popover.left }}>
+            <div className="av-popover-selected">
+              <i className="ti ti-quote" style={{ fontSize: 11, color: 'var(--subtle)' }} />
+              <span>{popover.text.length > 60 ? popover.text.slice(0, 60) + '...' : popover.text}</span>
+            </div>
+            <div className="av-popover-types">
+              {(['highlight', 'comment', 'suggestion'] as const).map(t => (
+                <button key={t} className={`av-type-btn av-type-${t} ${commentType === t ? 'av-type-active' : ''}`} onClick={() => setCommentType(t)}>
+                  <i className={`ti ${t === 'highlight' ? 'ti-highlight' : t === 'comment' ? 'ti-message' : 'ti-bulb'}`} />
+                  {t.charAt(0).toUpperCase() + t.slice(1)}
+                </button>
+              ))}
+            </div>
+            {commentType !== 'highlight' && (
+              <textarea className="av-popover-input" value={commentText} onChange={e => setCommentText(e.target.value)} placeholder={commentType === 'suggestion' ? 'Suggest a change...' : 'Add a comment...'} rows={2} autoFocus />
+            )}
+            <div className="av-popover-actions">
+              <button className="btn" onClick={() => setPopover(null)}>Cancel</button>
+              <button className="btn btn-accent" onClick={addAnnotation} disabled={commentType !== 'highlight' && !commentText.trim()}>
+                {commentType === 'highlight' ? 'Highlight' : 'Add'}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {annotations.length > 0 && (
+        <div className="av-sidebar">
+          <div className="av-sidebar-header">
+            <span>Annotations</span>
+            <span className="av-sidebar-count">{annotations.length}</span>
+          </div>
+          {annotations.map(a => (
+            <div key={a.id} className={`av-annotation av-annotation-${a.type} ${activeAnnotation === a.id ? 'av-annotation-active' : ''}`} onClick={() => setActiveAnnotation(activeAnnotation === a.id ? null : a.id)}>
+              <div className="av-annotation-header">
+                <i className={`ti ${a.type === 'highlight' ? 'ti-highlight' : a.type === 'comment' ? 'ti-message' : 'ti-bulb'}`} />
+                <span className="av-annotation-type">{a.type}</span>
+                <span className="av-annotation-time">{new Date(a.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                <button className="av-annotation-delete" onClick={e => { e.stopPropagation(); deleteAnnotation(a.id) }}><i className="ti ti-x" /></button>
+              </div>
+              <div className="av-annotation-quote">{a.text}</div>
+              {a.comment && <div className="av-annotation-comment">{a.comment}</div>}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function NoteEditor({ note, courses, allNotes, onSave, onClose, onOpenNote }: NoteEditorProps) {
   const { user, refreshProfile } = useAuth()
   const [title, setTitle] = useState(note?.title ?? '')
@@ -229,7 +363,8 @@ export default function NoteEditor({ note, courses, allNotes, onSave, onClose, o
   const [courseId, setCourseId] = useState(note?.course_id ?? '')
   const [week, setWeek] = useState(note?.week?.toString() ?? '')
   const [concepts, setConcepts] = useState(note?.concepts?.join(', ') ?? '')
-  const [mode, setMode] = useState<'blocks' | 'preview' | 'study'>('blocks')
+  const [mode, setMode] = useState<'blocks' | 'preview' | 'view' | 'study'>('blocks')
+  const [annotations, setAnnotations] = useState<{ id: string; blockId: string; text: string; comment: string; type: 'highlight' | 'comment' | 'suggestion'; createdAt: string }[]>([])
   const [saving, setSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState<string | null>(null)
   const [splitFile, setSplitFile] = useState<string | null>(null)
@@ -329,7 +464,10 @@ export default function NoteEditor({ note, courses, allNotes, onSave, onClose, o
                 <i className="ti ti-layout-list" style={{ fontSize: 12 }} />Build
               </button>
               <button className={`mode-btn ${mode === 'preview' ? 'active' : ''}`} onClick={() => setMode('preview')}>
-                <i className="ti ti-eye" style={{ fontSize: 12 }} />Preview
+                <i className="ti ti-pencil" style={{ fontSize: 12 }} />Edit
+              </button>
+              <button className={`mode-btn ${mode === 'view' ? 'active' : ''}`} onClick={() => setMode('view')}>
+                <i className="ti ti-eye" style={{ fontSize: 12 }} />View
               </button>
               <button className={`mode-btn ${mode === 'study' ? 'active' : ''}`} onClick={() => setMode('study')}>
                 <i className="ti ti-brain" style={{ fontSize: 12 }} />Study
@@ -379,6 +517,8 @@ export default function NoteEditor({ note, courses, allNotes, onSave, onClose, o
             <BlockEditor content={content} onContentChange={setContent} />
           ) : mode === 'preview' ? (
             <BlockEditor content={content} onContentChange={setContent} previewOnly />
+          ) : mode === 'view' ? (
+            <AnnotatedView content={content} annotations={annotations} onAnnotationsChange={setAnnotations} allNotes={allNotes} onOpenNote={onOpenNote} />
           ) : (
             <div className="note-editor-preview markdown-body">
               {content ? (
