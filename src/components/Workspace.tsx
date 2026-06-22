@@ -55,7 +55,7 @@ export default function Workspace() {
 
   async function createNote() {
     if (!user) { alert('Not logged in'); return }
-    const payload = { user_id: user.id, title: 'New note', content: '[]', concepts: [] as string[] }
+    const payload = { user_id: user.id, title: 'New note', content: '[]', concepts: [] as string[], course_id: null }
     const { data, error } = await supabase
       .from('notes')
       .insert(payload)
