@@ -921,10 +921,11 @@ interface Props {
   onContentChange: (content: string) => void
   previewOnly?: boolean
   noteTitle?: string
+  onTitleChange?: (title: string) => void
   courseName?: string
 }
 
-export default function BlockEditor({ content, onContentChange, previewOnly, noteTitle, courseName }: Props) {
+export default function BlockEditor({ content, onContentChange, previewOnly, noteTitle, onTitleChange, courseName }: Props) {
   const initial = useMemo(() => parseContent(content), [])
   const [blocks, setBlocks] = useState<Block[]>(initial.blocks)
   const [meta, setMeta] = useState<NoteMeta>(initial.meta)
@@ -1083,7 +1084,7 @@ export default function BlockEditor({ content, onContentChange, previewOnly, not
             <i className="ti ti-chevron-right" />
             <span className="ep-dir-current">{noteTitle || 'Untitled'}</span>
           </div>
-          <h1 className="ep-title">{noteTitle || 'Untitled'}</h1>
+          <input className="ep-title" value={noteTitle || ''} onChange={e => onTitleChange?.(e.target.value)} placeholder="Untitled" />
           <input className="ep-subtitle" value={meta.subtitle} onChange={e => syncMeta({ ...meta, subtitle: e.target.value })} placeholder="Add a subtitle..." />
           <div className="ep-excerpt-section">
             <label className="ep-meta-label">Featured excerpt</label>

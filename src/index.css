@@ -746,7 +746,8 @@ h4.bp-heading{font-size:13px}
 .ep-directory i{font-size:9px;color:#bbb}
 .ep-directory span{cursor:default}
 .ep-dir-current{color:#333;font-weight:600}
-.ep-title{font-size:32px;font-weight:800;color:#111;margin:0 0 6px;letter-spacing:-.5px;line-height:1.15}
+.ep-title{width:100%;border:none;outline:none;background:transparent;font-family:var(--font);font-size:32px;font-weight:800;color:#111;padding:0;margin:0 0 6px;letter-spacing:-.5px;line-height:1.15}
+.ep-title::placeholder{color:#ccc}
 .ep-subtitle{width:100%;border:none;outline:none;background:transparent;font-family:var(--font);font-size:17px;color:#555;padding:0;margin:0 0 32px;line-height:1.4}
 .ep-subtitle::placeholder{color:#ccc}
 .ep-excerpt-section{margin-bottom:20px}

@@ -495,7 +495,7 @@ export default function NoteEditor({ note, courses, allNotes, onSave, onClose, o
         </div>
       )}
 
-      {!focusMode && (
+      {!focusMode && mode !== 'preview' && (
         <div className="note-editor-title-row">
           <input type="text" className="note-editor-title" placeholder="Untitled note" value={title} onChange={e => setTitle(e.target.value)} />
           <input type="text" className="note-editor-concepts" placeholder="Concepts (comma separated), or use #tags inline" value={concepts} onChange={e => setConcepts(e.target.value)} />
@@ -519,7 +519,7 @@ export default function NoteEditor({ note, courses, allNotes, onSave, onClose, o
           {mode === 'blocks' ? (
             <BlockEditor content={content} onContentChange={setContent} />
           ) : mode === 'preview' ? (
-            <BlockEditor content={content} onContentChange={setContent} previewOnly noteTitle={title} courseName={courses.find(c => c.id === courseId)?.code} />
+            <BlockEditor content={content} onContentChange={setContent} previewOnly noteTitle={title} onTitleChange={setTitle} courseName={courses.find(c => c.id === courseId)?.code} />
           ) : mode === 'view' ? (
             <AnnotatedView content={content} annotations={annotations} onAnnotationsChange={setAnnotations} allNotes={allNotes} onOpenNote={onOpenNote} />
           ) : (
