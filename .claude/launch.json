@@ -3,9 +3,11 @@
   "configurations": [
     {
       "name": "dev",
-      "runtimeExecutable": "/Users/cedarrix-shantz/studyos/node_modules/.bin/vite",
-      "runtimeArgs": ["serve", "/Users/cedarrix-shantz/studyos", "--port", "5173"],
-      "port": 5173
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--", "--port", "${PORT}"],
+      "port": 5180,
+      "autoPort": true,
+      "cwd": "/Users/cedarrix-shantz/studyos"
     }
   ]
 }
