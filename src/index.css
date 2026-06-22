@@ -624,7 +624,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .be-add-sub:hover{color:var(--text)}
 
 /* Block menu (portal dropdown) */
-.be-menu{position:fixed;z-index:9999;background:var(--card);border:1px solid var(--border);border-radius:8px;width:240px;box-shadow:0 8px 30px rgba(0,0,0,0.12);overflow:hidden;display:flex;flex-direction:column}
+.be-menu{position:fixed;z-index:9999;background:var(--card);border:1px solid var(--border);border-radius:8px;width:240px;max-height:calc(100vh - 16px);box-shadow:0 8px 30px rgba(0,0,0,0.12);overflow:hidden;display:flex;flex-direction:column}
 .be-menu-search{border:none;border-bottom:1px solid var(--border);padding:8px 12px;font-family:var(--font);font-size:12px;outline:none;color:var(--text);background:transparent}
 .be-menu-search::placeholder{color:var(--subtle)}
 .be-menu-list{overflow-y:auto;max-height:320px;padding:4px}

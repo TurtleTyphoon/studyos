@@ -696,7 +696,11 @@ export default function BlockEditor({ content, onContentChange }: Props) {
 
   function openMenu(index: number, e: React.MouseEvent) {
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
-    setMenuPos({ top: rect.bottom + 4, left: Math.min(rect.left, window.innerWidth - 260) })
+    const menuHeight = 380
+    const spaceBelow = window.innerHeight - rect.bottom
+    const top = spaceBelow < menuHeight ? Math.max(8, rect.top - menuHeight) : rect.bottom + 4
+    const left = Math.min(rect.left, window.innerWidth - 260)
+    setMenuPos({ top, left })
     setMenuIndex(index)
   }
 
